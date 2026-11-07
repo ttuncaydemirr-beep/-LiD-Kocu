@@ -91,8 +91,10 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 16),
         Sheet(
           padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            children: <Widget>[
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.privacy_tip_outlined),
                 title: Text(c.t('privacy')),
@@ -110,7 +112,8 @@ class SettingsScreen extends StatelessWidget {
                 title: Text(c.t('resetProgress')),
                 onTap: () => _confirmReset(context),
               ),
-            ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),

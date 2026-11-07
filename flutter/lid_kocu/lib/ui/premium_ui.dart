@@ -136,7 +136,7 @@ class _PremiumPanelState extends State<PremiumPanel> {
                   : Text(c.billing.price == null ? c.t('buyPremium') : c.t('buyPremiumPrice', <String, Object>{'p': c.billing.price!})),
             ),
             const SizedBox(height: 8),
-            OutlinedButton(onPressed: _busy ? null : _restore, child: Text(c.t('restore'))),
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: _busy ? null : _restore, child: Text(c.t('restore')))),
           ],
           if (_message != null) ...<Widget>[
             const SizedBox(height: 10),

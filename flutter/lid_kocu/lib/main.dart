@@ -16,7 +16,7 @@ Future<void> main() async {
   try {
     final AppController controller = await AppController.create();
     runApp(LidKocuApp(controller: controller));
-  } catch (e) {
+  } catch (_) {
     runApp(const _LoadError());
   }
 }
