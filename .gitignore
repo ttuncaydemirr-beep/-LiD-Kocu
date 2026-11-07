@@ -1,0 +1,33 @@
+# İmza anahtarları ve gizli ayarlar — ASLA depoya girmez
+*.jks
+*.keystore
+key.properties
+keystore.properties
+local.properties
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+flutter/lid_kocu/.metadata
+
+# Android / Gradle
+.gradle/
+**/android/app/debug/
+**/android/app/release/
+captures/
+*.iml
+.idea/
+.vscode/
+
+# Node / Python
+node_modules/
+__pycache__/
+
+# Sistem
+.DS_Store
+Thumbs.db

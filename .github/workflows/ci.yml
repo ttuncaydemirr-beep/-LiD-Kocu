@@ -1,0 +1,55 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  veri:
+    name: Veri doğrulaması
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Soru kataloğu, çeviriler ve arayüz metinleri (tools/dogrula.py)
+        run: python3 tools/dogrula.py
+      - name: Prototipten çıkarılan veri güncel mi? (tools/veri-cikar.js)
+        run: |
+          node tools/veri-cikar.js
+          git diff --exit-code -- flutter/lid_kocu/assets/data/katalog.json flutter/lid_kocu/assets/data/ceviri.json
+
+  flutter:
+    name: Flutter analiz, test ve debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter/lid_kocu
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+      # Debug APK: yalnızca telefonda denemek içindir; Play Store'a YÜKLENEMEZ (imzalı AAB için release.yml).
+      - run: flutter build apk --debug
+      - run: cp build/app/outputs/flutter-apk/app-debug.apk LiD-Kocu-debug.apk
+      - uses: actions/upload-artifact@v5
+        with:
+          name: lid-kocu-debug-apk
+          path: flutter/lid_kocu/LiD-Kocu-debug.apk
+          retention-days: 14
