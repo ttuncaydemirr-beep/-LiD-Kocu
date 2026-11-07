@@ -45,13 +45,7 @@ jobs:
       - run: flutter pub get
 
       - name: Analiz
-        run: |
-          set +e
-          flutter analyze --no-fatal-infos --format=machine > analiz.txt 2>&1
-          kod=$?
-          awk -F'|' 'NF>=8 { s=($1=="ERROR")?"error":"warning"; f=$4; sub(".*/flutter/lid_kocu/","flutter/lid_kocu/",f); printf "::%s file=%s,line=%s,col=%s::%s (%s)\n", s, f, $5, $6, $8, $3 }' analiz.txt
-          cat analiz.txt | tail -40
-          exit $kod
+        run: flutter analyze --no-fatal-infos
 
       - name: Test
         run: flutter test --reporter github
