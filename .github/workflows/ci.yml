@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [main]
+    branches: ['**'] # her dalda çalışır (main dışındaki dallarda da sonuç görülsün)
   pull_request:
   workflow_dispatch:
 
