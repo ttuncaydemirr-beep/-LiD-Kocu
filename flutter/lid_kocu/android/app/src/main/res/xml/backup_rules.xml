@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 ve altı için otomatik yedekleme: çalışma ilerlemesi shared_preferences (FlutterSharedPreferences.xml) içindedir.
+     Premium bayrağı da buradadır; uygulama açılışta Google Play'den sahipliği yeniden doğrular. -->
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+</full-backup-content>
