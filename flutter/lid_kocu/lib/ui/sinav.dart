@@ -1,6 +1,5 @@
 // Deneme sınavı: giriş, sınav sırası (sayaç, numara şeridi), sonuç ve inceleme.
 import 'dart:async';
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 

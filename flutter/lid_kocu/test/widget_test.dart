@@ -56,7 +56,9 @@ void main() {
     await t.tap(find.byKey(const ValueKey('dil-ar')));
     await t.pumpAndSettle();
     expect(Directionality.of(t.element(find.byKey(const ValueKey('sekme-calis')))), TextDirection.rtl);
-    expect(Directionality.of(t.element(find.byKey(const ValueKey('soru-de')))), TextDirection.ltr);
+    // Almanca metnin kendisi (Almanca bileşeninin içindeki Text) her dilde soldan sağa.
+    final deMetin = find.descendant(of: find.byKey(const ValueKey('soru-de')), matching: find.byType(Text)).first;
+    expect(Directionality.of(t.element(deMetin)), TextDirection.ltr);
     await t.tap(find.byKey(const ValueKey('dil-tr')));
     await t.pumpAndSettle();
     expect(Directionality.of(t.element(find.byKey(const ValueKey('sekme-calis')))), TextDirection.ltr);
