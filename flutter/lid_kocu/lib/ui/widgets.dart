@@ -265,7 +265,7 @@ class QuestionView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              DeText(g![0], style: tt.bodyMedium),
+              DeText(g[0], style: tt.bodyMedium),
               if (gTr != null && gTr.isNotEmpty) ...<Widget>[const SizedBox(height: 6), Text(gTr[0], style: tt.bodyMedium?.copyWith(color: p.muted))],
             ],
           ),
@@ -282,7 +282,7 @@ class QuestionView extends StatelessWidget {
           index: i,
           de: q.options[i],
           translated: tr?.o?[i],
-          pictureDe: fourPictures ? g![i] : null,
+          pictureDe: fourPictures ? g[i] : null,
           pictureTr: fourPictures ? (gTr != null && gTr.length == 4 ? gTr[i] : null) : null,
           state: _stateOf(i),
           onTap: onPick == null ? null : () => onPick!(i),
