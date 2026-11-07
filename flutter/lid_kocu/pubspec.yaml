@@ -1,0 +1,35 @@
+name: lid_kocu
+description: "LiD Koçu — Almanya vatandaşlık testi (Leben in Deutschland) için TR/EN/DE/AR hazırlık uygulaması."
+publish_to: "none"
+
+# versionName 1.0.0, versionCode 1 (build numarası). Play'e her yüklemede "+N" kısmını 1 artırın
+# ve lib/config/app_config.dart içindeki appVersion değerini güncelleyin.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any # flutter_localizations hangi sürümü sabitliyorsa o kullanılır
+  shared_preferences: ^2.5.0
+  in_app_purchase: ^3.2.0
+  in_app_purchase_android: ">=0.4.0 <1.0.0" # GooglePlayPurchaseDetails.billingClientPurchase (bekleyen satın alma ayrımı)
+  flutter_tts: ^4.2.0
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/katalog.json
+    - assets/data/ceviri.json
+    - assets/data/metin.json
