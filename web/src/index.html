@@ -1,0 +1,211 @@
+<title>LiD Koçu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap">
+<style>
+/* Layout: one phone-width column, like a test booklet with a 33-box answer strip. */
+:root{
+  --paper:#f2f5f9;--sheet:#ffffff;--ink:#14233b;--muted:#566479;--line:#d3dbe6;
+  --accent:#1f4fd8;--on-accent:#ffffff;--mark:#ffc83d;--on-mark:#2a2100;
+  --good:#0d7a4f;--good-bg:#dff5ea;--bad:#b3261e;--bad-bg:#fde7e5;
+  --display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --arabic:"IBM Plex Sans Arabic","Noto Sans Arabic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;
+  --accent:#8fb0ff;--on-accent:#0d1830;--mark:#ffc83d;--on-mark:#2a2100;
+  --good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;
+  --accent:#8fb0ff;--on-accent:#0d1830;--mark:#ffc83d;--on-mark:#2a2100;
+  --good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:400 17px/1.5 var(--body)}
+[lang="ar"],[dir="rtl"]{font-family:var(--arabic)}
+[lang="de"]{font-family:var(--body)}
+.wrap{max-width:620px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.brand{font:800 26px/1 var(--display);letter-spacing:-.02em}
+.brand span{background:var(--mark);color:var(--on-mark);padding:0 6px;border-radius:4px}
+.langs{display:flex;gap:4px}
+.langs button{min-width:42px;padding:6px 8px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;font:600 14px var(--body);cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:2px solid var(--line)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 4px;color:var(--muted);font:700 16px var(--body);cursor:pointer}
+[dir="rtl"] nav button{font-family:var(--arabic)}
+nav button[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
+h1{font:800 clamp(27px,7vw,36px)/1.1 var(--display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+[dir="rtl"] h1,[dir="rtl"] .big{font-family:var(--arabic);font-weight:600;letter-spacing:0}
+h2{font:700 18px/1.3 var(--body);margin:0}
+[dir="rtl"] h2{font-family:var(--arabic);font-weight:600}
+p{margin:0}
+.muted{color:var(--muted);font-size:15px}
+.stack{display:grid;gap:12px}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.chip{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--mark);color:var(--on-mark);font-size:13px;font-weight:700}
+.q-de{font-size:19px;font-weight:700;line-height:1.35}
+.q-tr{color:var(--muted)}
+.opts{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.opt{width:100%;display:grid;gap:2px;text-align:start;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt small{color:var(--muted);font-size:15px}
+.opt.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt.ok{border-color:var(--good);background:var(--good-bg)}
+.opt.no{border-color:var(--bad);background:var(--bad-bg)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.pic{background:var(--paper);border-radius:6px;padding:10px 12px;display:grid;gap:6px;white-space:pre-line}
+.note{border-inline-start:4px solid var(--mark);padding-inline-start:10px}
+.btn{padding:12px 16px;border-radius:6px;border:1.5px solid var(--accent);background:var(--accent);color:var(--on-accent);font:700 16px var(--body);cursor:pointer}
+[dir="rtl"] .btn{font-family:var(--arabic)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+select{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:6px;background:var(--sheet);color:var(--ink);font:inherit}
+.big{font:800 44px/1 var(--display);font-variant-numeric:tabular-nums}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.strip{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.strip button{aspect-ratio:1;min-width:0;padding:0;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--muted);font:700 12px var(--body);font-variant-numeric:tabular-nums;cursor:pointer}
+.strip button.done{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.strip button.now{outline:2px solid var(--accent);outline-offset:1px}
+.strip button.r-ok{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+.strip button.r-no{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.timer{font:800 22px var(--display);font-variant-numeric:tabular-nums}
+footer{display:grid;gap:6px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+footer a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+<div class="wrap">
+  <header>
+    <div class="brand">LiD <span>Koçu</span></div>
+    <div class="langs" id="langs"></div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="app" class="stack"></main>
+  <footer id="foot"></footer>
+</div>
+<script>
+const K=/*KATALOG*/null,T=/*CEVIRI*/null;
+const SUPPORT="nilkaren.tuncay.demir@gmail.com";
+const SRC="https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf";
+const L={
+tr:{noImg:"Sınavda burada resim var. Uygulamada resmî açıklamasını okuyorsun.",home:"Ana sayfa",study:"Çalış",exam:"Deneme sınavı",hero:"Vatandaşlık testine kendi dilinde hazırlan",sub:"Sorular Almanca sorulur. Burada Almancasını görür, kendi dilinde anlarsın.",state:"Yaşadığın eyalet",learned:"{a} / {b} soru doğru bildin",today:"Bugünün sorusu",startExam:"Deneme sınavına başla",examInfo:"33 soru, 60 dakika, geçmek için en az 17 doğru.",next:"Sonraki soru",right:"Doğru.",wrong:"Yanlış. Doğru cevap işaretli.",dated:"Güncel bilgi: sınavdan önce kontrol et",noTr:"Bu sorunun çevirisi henüz hazır değil.",filter:"Göster",all:"Tüm sorular",translated:"Çevirisi hazır olanlar",wrongs:"Yanlış yaptıklarım",none:"Burada henüz soru yok. Tüm sorulara dönebilirsin.",q:"Soru {a} / {b}",prev:"Önceki",nextQ:"Sonraki",finish:"Sınavı bitir",left:"{n} soru boş.",passed:"Geçtin",failed:"Bu sefer olmadı",score:"33 sorudan {n} doğru. Geçmek için 17 gerekiyor.",again:"Yeni deneme",review:"Soruları gözden geçirmek için numaralara dokun.",empty:"Boş bırakıldı.",proto:"Prototip: 460 sorunun tamamı dört dilde hazır. Görseller yerine resmî açıklamalar var. Cevaplar yayından önce son kontrolden geçecek.",dis:"Bu uygulama resmî değildir; BAMF veya başka bir devlet kurumunu temsil etmez.",src:"Kaynak: BAMF soru kataloğu",ver:"Katalog sürümü: {d} (taslak)",sup:"Destek: {m}"},
+en:{noImg:"The real test shows a picture here. This app gives the official description instead.",home:"Home",study:"Study",exam:"Mock test",hero:"Prepare for the citizenship test in your language",sub:"The test is in German. Here you see the German text and understand it in your language.",state:"Your federal state",learned:"{a} of {b} questions answered correctly",today:"Today's question",startExam:"Start mock test",examInfo:"33 questions, 60 minutes, at least 17 correct to pass.",next:"Next question",right:"Correct.",wrong:"Not correct. The right answer is marked.",dated:"Current fact: check it before your test",noTr:"The translation for this question is not ready yet.",filter:"Show",all:"All questions",translated:"Translated questions",wrongs:"My mistakes",none:"No questions here yet. Go back to all questions.",q:"Question {a} of {b}",prev:"Previous",nextQ:"Next",finish:"Finish test",left:"{n} unanswered.",passed:"You passed",failed:"Not this time",score:"{n} of 33 correct. You need 17 to pass.",again:"New test",review:"Tap a number to review that question.",empty:"Left blank.",proto:"Prototype: All 460 questions are ready in four languages. Official descriptions replace the pictures. Answers get a final check before release.",dis:"This app is not official and does not represent BAMF or any government agency.",src:"Source: BAMF question catalog",ver:"Catalog version: {d} (draft)",sup:"Support: {m}"},
+de:{noImg:"Im Test steht hier ein Bild. Die App zeigt stattdessen die amtliche Beschreibung.",home:"Start",study:"Lernen",exam:"Probetest",hero:"Bereite dich auf den Einbürgerungstest vor",sub:"Der Test ist auf Deutsch. Hier übst du mit dem deutschen Text und einer Erklärung.",state:"Dein Bundesland",learned:"{a} von {b} Fragen richtig beantwortet",today:"Frage des Tages",startExam:"Probetest starten",examInfo:"33 Fragen, 60 Minuten, mindestens 17 richtig zum Bestehen.",next:"Nächste Frage",right:"Richtig.",wrong:"Falsch. Die richtige Antwort ist markiert.",dated:"Aktuelle Angabe: vor dem Test prüfen",noTr:"",filter:"Anzeigen",all:"Alle Fragen",translated:"Fragen mit Erklärung",wrongs:"Meine Fehler",none:"Hier gibt es noch keine Fragen. Wechsle zu allen Fragen.",q:"Frage {a} von {b}",prev:"Zurück",nextQ:"Weiter",finish:"Test beenden",left:"{n} unbeantwortet.",passed:"Bestanden",failed:"Diesmal nicht bestanden",score:"{n} von 33 richtig. Zum Bestehen brauchst du 17.",again:"Neuer Test",review:"Tippe auf eine Nummer, um die Frage anzusehen.",empty:"Nicht beantwortet.",proto:"Prototyp: Alle 460 Fragen sind in vier Sprachen fertig. Amtliche Beschreibungen ersetzen die Bilder. Die Antworten werden vor der Veröffentlichung abschließend geprüft.",dis:"Diese App ist nicht amtlich und vertritt weder das BAMF noch eine andere Behörde.",src:"Quelle: BAMF-Fragenkatalog",ver:"Katalogstand: {d} (Entwurf)",sup:"Hilfe: {m}"},
+ar:{noImg:"تظهر هنا صورة في الاختبار الحقيقي. يعرض التطبيق بدلًا منها الوصف الرسمي.",home:"الرئيسية",study:"تدرّب",exam:"اختبار تجريبي",hero:"استعد لاختبار الجنسية بلغتك",sub:"الاختبار باللغة الألمانية. هنا ترى النص الألماني وتفهمه بلغتك.",state:"ولايتك",learned:"أجبت بشكل صحيح عن {a} من {b} سؤالًا",today:"سؤال اليوم",startExam:"ابدأ الاختبار التجريبي",examInfo:"33 سؤالًا، 60 دقيقة، و17 إجابة صحيحة على الأقل للنجاح.",next:"السؤال التالي",right:"إجابة صحيحة.",wrong:"إجابة خاطئة. الإجابة الصحيحة مميزة.",dated:"معلومة متغيرة: تحقق منها قبل الاختبار",noTr:"ترجمة هذا السؤال غير جاهزة بعد.",filter:"عرض",all:"كل الأسئلة",translated:"الأسئلة المترجمة",wrongs:"أخطائي",none:"لا توجد أسئلة هنا بعد. ارجع إلى كل الأسئلة.",q:"السؤال {a} من {b}",prev:"السابق",nextQ:"التالي",finish:"إنهاء الاختبار",left:"{n} دون إجابة.",passed:"لقد نجحت",failed:"لم تنجح هذه المرة",score:"{n} إجابة صحيحة من 33. تحتاج إلى 17 للنجاح.",again:"اختبار جديد",review:"اضغط على رقم لمراجعة السؤال.",empty:"تُرك دون إجابة.",proto:"نسخة تجريبية: جميع الأسئلة الـ460 جاهزة بأربع لغات. وتحل الأوصاف الرسمية محل الصور. ستخضع الإجابات لمراجعة نهائية قبل الإصدار.",dis:"هذا التطبيق غير رسمي ولا يمثل BAMF أو أي جهة حكومية.",src:"المصدر: كتالوج أسئلة BAMF",ver:"إصدار الكتالوج: {d} (مسودة)",sup:"الدعم: {m}"}
+};
+const LANGS=[["tr","TR"],["en","EN"],["de","DE"],["ar","عر"]];
+const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const S={lang:load("lang","tr"),state:load("state","berlin"),res:load("res",{}),view:"home",filter:"all",idx:0,picked:null,exam:null,tick:null};
+const $=id=>document.getElementById(id);
+const t=(k,v={})=>L[S.lang][k].replace(/\{(\w+)\}/g,(_,n)=>v[n]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pool=()=>K.general.concat(K.states[S.state].q);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pickExam=()=>shuffle(shuffle(K.general).slice(0,30).concat(shuffle(K.states[S.state].q).slice(0,3)));
+const scoreOf=e=>e.qs.reduce((n,q,i)=>n+(e.ans[i]===q.c?1:0),0);
+const DATED=[72,73,75,236];
+const dated=q=>DATED.includes(q.id);
+const tx=q=>S.lang==="de"?null:(T[q.id]||{})[S.lang];
+const exp=q=>(T[q.id]||{})[S.lang]?.x;
+const dayQ=()=>{const p=K.general.filter(q=>T[q.id]);return p[Math.floor(Date.now()/864e5)%p.length]};
+
+function qHead(q){
+  const tr=tx(q);
+  const g=(T[q.id]||{}).de?.g,one=g&&g.length===1,gt=tr&&tr.g;
+  return `<p class="q-de" lang="de" dir="ltr">${esc(q.de)}</p>
+  ${tr?`<p class="q-tr">${esc(tr.q)}</p>`:(S.lang==="de"?"":`<p class="muted">${t("noTr")}</p>`)}
+  ${g?`<p class="muted">${t("noImg")}</p>`:""}
+  ${one?`<div class="pic"><p lang="de" dir="ltr">${esc(g[0])}</p>${gt?`<p class="muted">${esc(gt[0])}</p>`:""}</div>`:""}
+  ${dated(q)?`<p><span class="chip">${t("dated")}</span></p>`:""}`;
+}
+function optHtml(q,i,cls,attr){
+  const tr=tx(q),G=(T[q.id]||{}).de?.g;
+  return `<li><button class="opt ${cls}" data-i="${i}" ${attr}><span lang="de" dir="ltr" style="text-align:start">${esc(q.o[i])}</span>${tr?`<small>${esc(tr.o[i])}</small>`:""}${G&&G.length===4?`<small lang="de" dir="ltr" style="text-align:start">${esc(G[i])}</small>${tr&&tr.g?`<small>${esc(tr.g[i])}</small>`:""}`:""}</button></li>`;
+}
+function practice(q){
+  const done=S.picked!==null;
+  let h=qHead(q)+`<ul class="opts">`;
+  q.o.forEach((_,i)=>{const c=done?(i===q.c?"ok":i===S.picked?"no":""):"";h+=optHtml(q,i,c,done?"disabled":"")});
+  h+="</ul>";
+  if(done){h+=`<p role="status"><b>${S.picked===q.c?t("right"):t("wrong")}</b></p>`;if(exp(q))h+=`<p class="note">${esc(exp(q))}</p>`}
+  return h;
+}
+function answer(q,i){S.picked=i;S.res[q.id]=i===q.c;save("res",S.res);render()}
+function bindOpts(fn){document.querySelectorAll(".opt:not(:disabled)").forEach(b=>b.onclick=()=>fn(+b.dataset.i))}
+
+function vHome(){
+  const p=pool(),ok=p.filter(q=>S.res[q.id]).length,q=dayQ();
+  $("app").innerHTML=`<div class="stack"><h1>${t("hero")}</h1><p>${t("sub")}</p></div>
+  <section class="sheet"><label for="st"><h2>${t("state")}</h2></label>
+    <select id="st">${Object.entries(K.states).map(([k,v])=>`<option value="${k}" ${k===S.state?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
+    <div class="bar" aria-hidden="true"><i style="width:${ok/p.length*100}%"></i></div>
+    <p class="muted">${t("learned",{a:ok,b:p.length})}</p></section>
+  <section class="sheet"><h2>${t("today")}</h2>${practice(q)}</section>
+  <section class="sheet"><p>${t("examInfo")}</p><button class="btn" id="go">${t("startExam")}</button></section>`;
+  $("st").onchange=e=>{S.state=e.target.value;save("state",S.state);render()};
+  $("go").onclick=startExam;
+  bindOpts(i=>answer(q,i));
+}
+function list(){
+  const p=pool();
+  if(S.filter==="translated")return p.filter(q=>T[q.id]);
+  if(S.filter==="wrongs")return p.filter(q=>S.res[q.id]===false);
+  return p;
+}
+function vStudy(){
+  const l=list(),f=`<label for="fl" class="muted">${t("filter")}</label><select id="fl">${["all","wrongs"].map(k=>`<option value="${k}" ${k===S.filter?"selected":""}>${t(k==="wrongs"?"wrongs":k)}</option>`).join("")}</select>`;
+  if(!l.length){$("app").innerHTML=`<div class="stack">${f}<p class="sheet">${t("none")}</p></div>`}
+  else{
+    S.idx%=l.length;const q=l[S.idx];
+    $("app").innerHTML=`<div class="stack">${f}</div><section class="sheet"><p class="muted">${t("q",{a:S.idx+1,b:l.length})}</p>${practice(q)}
+    ${S.picked!==null?`<button class="btn" id="nx">${t("next")}</button>`:""}</section>`;
+    bindOpts(i=>answer(q,i));
+    if($("nx"))$("nx").onclick=()=>{S.idx++;S.picked=null;render()};
+  }
+  $("fl").onchange=e=>{S.filter=e.target.value;S.idx=0;S.picked=null;render()};
+}
+function startExam(){
+  clearInterval(S.tick);
+  S.exam={qs:pickExam(),ans:Array(33).fill(null),i:0,end:Date.now()+36e5,over:false};
+  S.view="exam";render();
+  S.tick=setInterval(()=>{const e=S.exam;if(!e||e.over)return;if(Date.now()>=e.end){finish();return}const el=$("tm");if(el)el.textContent=clock()},1000);
+}
+function clock(){const s=Math.max(0,Math.ceil((S.exam.end-Date.now())/1000));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function finish(){clearInterval(S.tick);const e=S.exam;e.over=true;e.i=0;e.qs.forEach((q,i)=>{if(e.ans[i]!==null)S.res[q.id]=e.ans[i]===q.c});save("res",S.res);render()}
+function strip(e){return `<div class="strip" dir="ltr">${e.qs.map((q,i)=>{let c=i===e.i?"now ":"";c+=e.over?(e.ans[i]===q.c?"r-ok":"r-no"):(e.ans[i]!==null?"done":"");return `<button class="${c}" data-j="${i}" aria-label="${i+1}">${i+1}</button>`}).join("")}</div>`}
+function vExam(){
+  const e=S.exam;
+  if(!e){$("app").innerHTML=`<section class="sheet"><h2>${t("exam")}</h2><p>${t("examInfo")}</p><button class="btn" id="go">${t("startExam")}</button></section>`;$("go").onclick=startExam;return}
+  const q=e.qs[e.i],a=e.ans[e.i];
+  if(e.over){
+    const n=scoreOf(e),pass=n>=17;
+    $("app").innerHTML=`<section class="sheet"><p class="chip" style="justify-self:start;background:${pass?"var(--good-bg)":"var(--bad-bg)"};color:${pass?"var(--good)":"var(--bad)"}">${pass?t("passed"):t("failed")}</p>
+      <p class="big" dir="ltr" style="text-align:start">${n} / 33</p><p>${t("score",{n})}</p><button class="btn" id="go">${t("again")}</button></section>
+      <p class="muted">${t("review")}</p>${strip(e)}
+      <section class="sheet"><p class="muted">${t("q",{a:e.i+1,b:33})}</p>${qHead(q)}<ul class="opts">${q.o.map((_,i)=>optHtml(q,i,i===q.c?"ok":i===a?"no":"","disabled")).join("")}</ul>${a===null?`<p class="muted">${t("empty")}</p>`:""}${exp(q)?`<p class="note">${esc(exp(q))}</p>`:""}</section>`;
+    $("go").onclick=startExam;
+  }else{
+    const left=e.ans.filter(x=>x===null).length;
+    $("app").innerHTML=`<div class="row"><span class="muted">${t("q",{a:e.i+1,b:33})}</span><span class="timer" id="tm" dir="ltr">${clock()}</span></div>${strip(e)}
+      <section class="sheet">${qHead(q)}<ul class="opts">${q.o.map((_,i)=>optHtml(q,i,a===i?"sel":"","")).join("")}</ul></section>
+      <div class="row"><button class="btn ghost" id="pv" ${e.i?"":"disabled"}>${t("prev")}</button><button class="btn ghost" id="nq" ${e.i<32?"":"disabled"}>${t("nextQ")}</button></div>
+      <button class="btn" id="fn">${t("finish")}</button><p class="muted">${left?t("left",{n:left}):""}</p>`;
+    bindOpts(i=>{e.ans[e.i]=i;if(e.i<32)e.i++;render()});
+    $("pv").onclick=()=>{e.i--;render()};$("nq").onclick=()=>{e.i++;render()};$("fn").onclick=finish;
+  }
+  document.querySelectorAll(".strip button").forEach(b=>b.onclick=()=>{e.i=+b.dataset.j;render()});
+}
+function render(){
+  const r=document.documentElement;r.lang=S.lang;r.dir=S.lang==="ar"?"rtl":"ltr";
+  $("langs").innerHTML=LANGS.map(([k,n])=>`<button data-l="${k}" lang="${k}" aria-pressed="${k===S.lang}">${n}</button>`).join("");
+  document.querySelectorAll("#langs button").forEach(b=>b.onclick=()=>{S.lang=b.dataset.l;save("lang",S.lang);render()});
+  $("nav").innerHTML=["home","study","exam"].map(v=>`<button data-v="${v}" ${v===S.view?'aria-current="page"':""}>${t(v)}</button>`).join("");
+  document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;S.picked=null;render()});
+  ({home:vHome,study:vStudy,exam:vExam})[S.view]();
+  $("foot").innerHTML=`<p>${t("proto")}</p><p>${t("dis")}</p><p><a href="${SRC}" target="_blank" rel="noopener">${t("src")}</a> · ${t("ver",{d:"07.05.2025"})}</p><p>${t("sup",{m:SUPPORT})}</p>`;
+}
+render();
+</script>

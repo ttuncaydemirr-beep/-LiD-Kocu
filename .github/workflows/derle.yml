@@ -1,0 +1,115 @@
+# LiD Koçu — her gönderimde: veri kontrolü, Flutter analiz + test, deneme APK ve (anahtar varsa) Play AAB.
+# Deneme APK: Releases > "Deneme APK" sayfasından telefona indirilir. Play Store'a yüklenmez.
+# Play AAB: Actions > son çalışma > Artifacts > "lid-kocu-play-aab" (GitHub'a giriş gerekir).
+# İmza için dört gizli değer (Settings > Secrets and variables > Actions):
+#   KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+name: Derle
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  veri:
+    name: Veri ve web önizleme
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Flutter varlıkları web verisiyle aynı mı
+        run: |
+          python3 web/tools/derle.py
+          git diff --exit-code -- flutter/lid_kocu/assets || { echo "::error::flutter/lid_kocu/assets güncel değil: python3 web/tools/derle.py çalıştırıp gönderin"; exit 1; }
+
+  flutter:
+    name: Flutter analiz, test ve derleme
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter/lid_kocu
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+
+      - name: Analiz
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --format=machine > analiz.txt 2>&1
+          kod=$?
+          awk -F'|' 'NF>=8 { s=($1=="ERROR")?"error":"warning"; f=$4; sub(".*/flutter/lid_kocu/","flutter/lid_kocu/",f); printf "::%s file=%s,line=%s,col=%s::%s (%s)\n", s, f, $5, $6, $8, $3 }' analiz.txt
+          cat analiz.txt | tail -40
+          exit $kod
+
+      - name: Test
+        run: flutter test --reporter github
+
+      - name: Deneme APK
+        run: |
+          set -o pipefail
+          flutter build apk --release 2>&1 | tee apk.log || { tail -25 apk.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=APK derlemesi::/'; echo; exit 1; }
+          cp build/app/outputs/flutter-apk/app-release.apk LiD-Kocu-deneme.apk
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: lid-kocu-deneme-apk
+          path: flutter/lid_kocu/LiD-Kocu-deneme.apk
+          retention-days: 14
+
+      - name: Deneme APK sürümünü güncelle
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Telefonda denemek için otomatik derlenen APK (commit ${GITHUB_SHA::7}). Play Store'a yüklenmez; satın alma bu dosyada çalışmaz."
+          if gh release view deneme-apk >/dev/null 2>&1; then
+            gh release upload deneme-apk LiD-Kocu-deneme.apk --clobber
+            gh release edit deneme-apk --notes "$NOTES" --prerelease
+          else
+            gh release create deneme-apk LiD-Kocu-deneme.apk --title "Deneme APK" --notes "$NOTES" --prerelease --target "$GITHUB_SHA"
+          fi
+
+      - name: Yükleme anahtarını yerleştir
+        id: anahtar
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::İmza anahtarı eklenmemiş: Play'e yüklenecek AAB üretilmedi (README > İmza anahtarı)."
+            echo "var=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/upload.jks
+          printf 'storeFile=upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
+          echo "var=true" >> "$GITHUB_OUTPUT"
+
+      - name: Play AAB
+        if: steps.anahtar.outputs.var == 'true'
+        run: |
+          set -o pipefail
+          flutter build appbundle --release 2>&1 | tee aab.log || { tail -25 aab.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=AAB derlemesi::/'; echo; exit 1; }
+          V=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr '+' '-')
+          cp build/app/outputs/bundle/release/app-release.aab "LiD-Kocu-$V.aab"
+          rm -f android/upload.jks android/key.properties
+
+      - uses: actions/upload-artifact@v5
+        if: steps.anahtar.outputs.var == 'true'
+        with:
+          name: lid-kocu-play-aab
+          path: flutter/lid_kocu/LiD-Kocu-*.aab
+          retention-days: 30
