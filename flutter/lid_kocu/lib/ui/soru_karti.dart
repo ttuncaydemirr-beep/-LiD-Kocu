@@ -10,12 +10,22 @@ import 'tema.dart';
 enum KartModu { pratik, sinav, inceleme }
 
 class SoruKarti extends StatelessWidget {
-  const SoruKarti({super.key, required this.soru, required this.mod, this.secim, this.onSec});
+  const SoruKarti({
+    super.key,
+    required this.soru,
+    required this.mod,
+    this.secim,
+    this.onSec,
+    this.ucretsizAciklama = false,
+  });
 
   final Soru soru;
   final KartModu mod;
   final int? secim;
   final ValueChanged<int>? onSec;
+
+  /// Premium olmadan da açıklama açık (günün sorusu, yanlış listesinin ilk 3'ü).
+  final bool ucretsizAciklama;
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +39,7 @@ class SoruKarti extends StatelessWidget {
       spacing: 12,
       children: [
         SoruBasligi(soru: soru),
-        if (s.premium)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
-              key: const ValueKey('dinle'),
-              onPressed: () => s.dinle(soru),
-              icon: const Icon(Icons.volume_up),
-              label: Text(s.t('listen')),
-            ),
-          ),
+        Align(alignment: AlignmentDirectional.centerStart, child: DinleDugmesi(soru: soru)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 8,
@@ -68,7 +69,7 @@ class SoruKarti extends StatelessWidget {
             ),
           ),
         if (mod == KartModu.inceleme && secim == null) SolukMetin(s.t('empty')),
-        if (acik) AciklamaBolumu(soru: soru),
+        if (acik) AciklamaBolumu(soru: soru, ucretsiz: ucretsizAciklama),
       ],
     );
   }
@@ -206,16 +207,88 @@ class _Secenek extends StatelessWidget {
   }
 }
 
-/// Açıklama: Premium veya örnek ise metin, değilse kilit notu ve Premium düğmesi.
-class AciklamaBolumu extends StatelessWidget {
-  const AciklamaBolumu({super.key, required this.soru});
+/// Sesli dinleme. Premium'da Almanca soruyu okur; ücretsiz kullanıcıda kilitli görünür ve Premium ekranını açar.
+/// Kart kapanınca (soru değişince, sekme değişince) ses durur.
+class DinleDugmesi extends StatefulWidget {
+  const DinleDugmesi({super.key, required this.soru});
   final Soru soru;
+
+  @override
+  State<DinleDugmesi> createState() => _DinleDugmesiDurumu();
+}
+
+class _DinleDugmesiDurumu extends State<DinleDugmesi> {
+  AppState? _s;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _s = DurumKapsami.oku(context);
+  }
+
+  @override
+  void didUpdateWidget(DinleDugmesi eski) {
+    super.didUpdateWidget(eski);
+    if (eski.soru.id != widget.soru.id) _s?.sesDurdur();
+  }
+
+  @override
+  void dispose() {
+    _s?.sesDurdur();
+    super.dispose();
+  }
+
+  Future<void> _cal() async {
+    final s = DurumKapsami.oku(context);
+    final m = ScaffoldMessenger.of(context);
+    final r = await s.dinle(widget.soru);
+    if (!mounted) return;
+    switch (r) {
+      case SesSonucu.tamam:
+        break;
+      case SesSonucu.kilitli:
+        premiumAc(context);
+      case SesSonucu.dilYok:
+        await showDialog<void>(
+          context: context,
+          builder: (c) => AlertDialog(
+            key: const ValueKey('tts-yok'),
+            title: Text(s.t('ttsMissingTitle')),
+            content: Text(s.t('ttsMissing')),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(c).pop(), child: Text(s.t('ok'))),
+            ],
+          ),
+        );
+      case SesSonucu.hata:
+        m.showSnackBar(SnackBar(content: Text(s.t('ttsError'))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = DurumKapsami.of(context);
+    return TextButton.icon(
+      key: const ValueKey('dinle'),
+      onPressed: s.premium ? _cal : () => premiumAc(context),
+      icon: Icon(s.premium ? Icons.volume_up : Icons.lock),
+      label: Text(s.premium ? s.t('listen') : s.t('listenPremium')),
+    );
+  }
+}
+
+/// Açıklama: Premium veya ücretsiz ise metin, değilse kilit notu ve fiyatlı Premium düğmesi.
+class AciklamaBolumu extends StatelessWidget {
+  const AciklamaBolumu({super.key, required this.soru, this.ucretsiz = false});
+  final Soru soru;
+  final bool ucretsiz;
 
   @override
   Widget build(BuildContext context) {
     final AppState s = DurumKapsami.of(context);
     final r = Renk.of(context);
-    if (!s.aciklamaAcik(soru)) {
+    if (!s.aciklamaAcik(soru, ucretsiz: ucretsiz)) {
+      final fiyat = s.billing.fiyat;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 8,
@@ -226,7 +299,7 @@ class AciklamaBolumu extends StatelessWidget {
             child: OutlinedButton(
               key: const ValueKey('premium-ac'),
               onPressed: () => premiumAc(context),
-              child: Text(s.t('open')),
+              child: Text(fiyat != null ? s.t('buyShort', {'p': fiyat}) : s.t('open')),
             ),
           ),
         ],
@@ -241,7 +314,7 @@ class AciklamaBolumu extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 6,
         children: [
-          if (!s.premium && ornekAciklama(soru.id))
+          if (!s.premium)
             Align(alignment: AlignmentDirectional.centerStart, child: Etiket(s.t('sample'), kucuk: true)),
           Text(a, style: const TextStyle(height: 1.5)),
         ],

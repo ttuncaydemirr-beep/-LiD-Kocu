@@ -1,7 +1,8 @@
-// Ana sayfa: karşılama, eyalet seçimi, ilerleme, günün sorusu, sınav girişi.
+// Ana sayfa: karşılama, eyalet seçimi, hazırlık göstergesi, günün sorusu, sınav girişi.
 import 'package:flutter/material.dart';
 
 import '../core/veri.dart';
+import '../state.dart';
 import 'durum.dart';
 import 'premium.dart';
 import 'soru_karti.dart';
@@ -15,8 +16,13 @@ class AnaSayfa extends StatefulWidget {
   State<AnaSayfa> createState() => _AnaSayfaDurumu();
 }
 
+String _tarih(DateTime t) =>
+    '${t.day.toString().padLeft(2, '0')}.${t.month.toString().padLeft(2, '0')}.${t.year}';
+
 class _AnaSayfaDurumu extends State<AnaSayfa> {
+  // Seçim, günün sorusunun kimliğine bağlı: gece yarısı geçince eski seçim yeni soruya taşınmaz.
   int? _secim;
+  String? _secimId;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,9 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
     final havuz = s.havuz;
     final dogru = s.dogruSayisi;
     final Soru gun = s.gununSorusu;
+    final ort = s.son3Ortalama;
+    final kalan = s.ucretsizKalanSinav;
+    final devam = s.sinavDevamEdiyor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 18,
@@ -74,6 +83,28 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
           ),
         ),
         Kart(
+          key: const ValueKey('hazirlik'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              Baslik(s.t('ready', {'n': s.hazirlik})),
+              if (ort != null)
+                Text(s.t('avg3', {'a': ort.toStringAsFixed(1), 'b': sinavSoruSayisi}))
+              else
+                SolukMetin(s.t('noHistory')),
+              for (final k in s.gecmis.reversed.take(3))
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Align(
+                    alignment: s.rtl ? Alignment.centerRight : Alignment.centerLeft,
+                    child: SolukMetin('${_tarih(k.tarih)}  ·  ${k.puan} / $sinavSoruSayisi'),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 12,
@@ -83,9 +114,13 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
                 key: ValueKey('gun-${gun.id}'),
                 soru: gun,
                 mod: KartModu.pratik,
-                secim: _secim,
+                secim: _secimId == gun.id ? _secim : null,
+                ucretsizAciklama: true,
                 onSec: (i) {
-                  setState(() => _secim = i);
+                  setState(() {
+                    _secim = i;
+                    _secimId = gun.id;
+                  });
                   s.cevapla(gun, i);
                 },
               ),
@@ -98,10 +133,11 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
             spacing: 12,
             children: [
               Text(s.t('examInfo')),
+              if (kalan != null && !devam) SolukMetin(ucretsizMetni(s, kalan)),
               FilledButton(
                 key: const ValueKey('basla-ana'),
                 onPressed: widget.onSinavBasla,
-                child: Text(s.t('startExam')),
+                child: Text(s.t(devam ? 'continueExam' : 'startExam')),
               ),
             ],
           ),
@@ -134,4 +170,11 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
       ],
     );
   }
+}
+
+/// Kalan ücretsiz deneme bilgisi.
+String ucretsizMetni(AppState s, int kalan) {
+  if (kalan <= 0) return s.t('freeNone');
+  if (s.sinavSayisi >= ucretsizSinav) return s.t('freeToday');
+  return s.t('freeLeft', {'n': kalan});
 }
