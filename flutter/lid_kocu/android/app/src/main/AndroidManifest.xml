@@ -1,8 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Satın alma (Play Billing) ve resmî kaynak bağlantısı için ağ -->
+    <!-- Satın alma (Play Billing) ve kaynak bağlantısı için ağ. BILLING izni Billing Library'den birleşir. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Dokunmatik ekran şart değil (Chromebook/TV uyumu için zorunlu değil olarak işaretli) -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

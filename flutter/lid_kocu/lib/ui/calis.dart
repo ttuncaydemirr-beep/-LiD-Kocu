@@ -1,7 +1,9 @@
-// Çalış sekmesi: tüm sorular veya yanlışlarım (Premium).
+// Çalış sekmesi: tüm sorular, yanlışlarım, son denemenin yanlışları. Kaldığı yerden devam eder (süzgeç başına),
+// isteğe bağlı karışık sıra. Yanlış listelerinde Premium olmadan ilk 3 sorunun açıklaması açıktır.
 import 'package:flutter/material.dart';
 
 import '../core/veri.dart';
+import '../state.dart';
 import 'durum.dart';
 import 'premium.dart';
 import 'soru_karti.dart';
@@ -15,48 +17,88 @@ class CalisSayfasi extends StatefulWidget {
 }
 
 class _CalisDurumu extends State<CalisSayfasi> {
-  String _filtre = 'all';
-  List<Soru>? _liste; // filtre değişince çekilen görüntü; cevap verince yer değiştirmez
+  List<Soru>? _liste; // süzgeç değişince çekilen görüntü; cevap verince yer değiştirmez
+  String? _listeFiltre;
   int _idx = 0;
   int? _secim;
+
+  void _sifirla() {
+    _liste = null;
+    _listeFiltre = null;
+    _secim = null;
+  }
+
+  void _git(AppState s, String f, List<Soru> l, int i) {
+    s.sesDurdur();
+    setState(() {
+      _idx = i;
+      _secim = null;
+    });
+    if (l.isNotEmpty) s.calisKonumKaydet(f, l[i].id);
+    ustuneKaydir(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
-    final kilit = _filtre == 'wrongs' && !s.premium;
+    final f = s.calisFiltre;
+    final yanlisListesi = f == filtreYanlis || f == filtreSinav;
 
-    final filtre = Column(
+    if (_listeFiltre != f || _liste == null) {
+      final l = s.calismaListesi(f);
+      _liste = l;
+      _listeFiltre = f;
+      _idx = s.calisBaslangic(f, l);
+      _secim = null;
+    }
+    final l = _liste!;
+
+    final ust = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 6,
       children: [
         SolukMetin(s.t('filter')),
         Acilir<String>(
           etiket: s.t('filter'),
-          deger: _filtre,
+          deger: f,
           ogeler: [
-            for (final k in const ['all', 'wrongs'])
-              DropdownMenuItem<String>(value: k, child: Text(s.t(k))),
+            for (final k in [filtreTumu, filtreYanlis, if (s.sonSinavYanlislari != null) filtreSinav])
+              DropdownMenuItem<String>(value: k, child: Text(s.t(k == filtreSinav ? 'examWrongs' : k))),
           ],
-          degisti: (v) => setState(() {
-            _filtre = v;
-            _liste = null;
-            _idx = 0;
-            _secim = null;
-          }),
+          degisti: (v) {
+            setState(_sifirla);
+            s.calisFiltreSec(v);
+          },
         ),
+        if (f != filtreSinav)
+          MergeSemantics(
+            child: SwitchListTile(
+              key: const ValueKey('karisik'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(s.t('shuffle')),
+              value: s.karisik,
+              onChanged: (v) {
+                setState(_sifirla);
+                s.karisikSec(v);
+              },
+            ),
+          ),
+        if (yanlisListesi) ...[
+          Text(s.t('wrongsCount', {'n': l.length}), key: const ValueKey('yanlis-sayisi')),
+          if (!s.premium && l.isNotEmpty) SolukMetin(s.t('firstFree', {'n': ucretsizYanlis})),
+        ],
       ],
     );
 
     Widget icerik;
-    if (kilit) {
-      icerik = const PremiumIcerik();
+    if (l.isEmpty) {
+      icerik = Kart(child: Text(s.t('none')));
     } else {
-      final l = _liste ??= (_filtre == 'wrongs' ? s.yanlislar : s.havuz);
-      if (l.isEmpty) {
-        icerik = Kart(child: Text(s.t('none')));
+      final i = _idx % l.length;
+      final soru = l[i];
+      if (yanlisListesi && !s.premium && i >= ucretsizYanlis) {
+        icerik = _KilitKarti(kalan: l.length - ucretsizYanlis, onBastan: () => _git(s, f, l, 0));
       } else {
-        final i = _idx % l.length;
-        final soru = l[i];
         icerik = Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,6 +110,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
                 soru: soru,
                 mod: KartModu.pratik,
                 secim: _secim,
+                ucretsizAciklama: yanlisListesi,
                 onSec: (c) {
                   setState(() => _secim = c);
                   s.cevapla(soru, c);
@@ -76,14 +119,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
               if (_secim != null)
                 FilledButton(
                   key: const ValueKey('sonraki-soru'),
-                  onPressed: () {
-                    s.sesDurdur();
-                    setState(() {
-                      _idx = (i + 1) % l.length;
-                      _secim = null;
-                    });
-                    ustuneKaydir(context);
-                  },
+                  onPressed: () => _git(s, f, l, (i + 1) % l.length),
                   child: Text(s.t('next')),
                 ),
             ],
@@ -95,7 +131,43 @@ class _CalisDurumu extends State<CalisSayfasi> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 18,
-      children: [filtre, icerik],
+      children: [ust, icerik],
+    );
+  }
+}
+
+/// Yanlış listesinde ücretsiz 3 sorudan sonra: kişisel Premium teklifi.
+class _KilitKarti extends StatelessWidget {
+  const _KilitKarti({required this.kalan, required this.onBastan});
+  final int kalan;
+  final VoidCallback onBastan;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = DurumKapsami.of(context);
+    final fiyat = s.billing.fiyat;
+    return Kart(
+      key: const ValueKey('yanlis-kilit'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: [
+          Row(
+            children: [
+              const ExcludeSemantics(child: Icon(Icons.lock)),
+              const SizedBox(width: 10),
+              Expanded(child: Baslik(s.t('lockedRest', {'n': kalan}))),
+            ],
+          ),
+          Text(s.t('premiumSub')),
+          FilledButton(
+            key: const ValueKey('yanlis-premium'),
+            onPressed: () => premiumAc(context),
+            child: Text(fiyat != null ? s.t('buyShort', {'p': fiyat}) : s.t('open')),
+          ),
+          OutlinedButton(key: const ValueKey('bastan'), onPressed: onBastan, child: Text(s.t('restart'))),
+        ],
+      ),
     );
   }
 }

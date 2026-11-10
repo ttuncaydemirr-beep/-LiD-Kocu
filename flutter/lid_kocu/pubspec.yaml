@@ -2,12 +2,12 @@ name: lid_kocu
 description: "LiD Koçu: Almanya vatandaşlık testine dört dilde hazırlık."
 publish_to: "none"
 
-# Play'e her yüklemede "+N" kısmını 1 artırın.
-version: 1.0.0+1
+# Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi.
+version: 1.0.0+2
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
-  flutter: ">=3.38.1"
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
@@ -15,8 +15,9 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.5.0
-  in_app_purchase: ^3.2.0
-  in_app_purchase_android: ">=0.4.0 <1.0.0"
+  in_app_purchase: ^3.3.1
+  # 0.5.x = Play Billing Library 8+ (0.5.5: BL 9.1). Play, BL7 içeren yüklemeleri kabul etmiyor.
+  in_app_purchase_android: ^0.5.5
   url_launcher: ^6.3.0
   flutter_tts: ^4.2.0
 

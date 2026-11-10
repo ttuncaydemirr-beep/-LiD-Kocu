@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 11 ve altı için otomatik yedekleme: oyun ilerlemesi shared_preferences (FlutterSharedPreferences.xml) içindedir. -->
+<!-- Android 11 ve altı için otomatik yedekleme: çalışma ilerlemesi, ayarlar ve deneme geçmişi
+     shared_preferences (FlutterSharedPreferences.xml) içindedir. -->
 <full-backup-content>
     <include domain="sharedpref" path="." />
 </full-backup-content>

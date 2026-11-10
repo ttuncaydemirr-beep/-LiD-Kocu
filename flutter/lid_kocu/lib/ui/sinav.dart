@@ -5,33 +5,41 @@ import 'package:flutter/material.dart';
 
 import '../core/veri.dart';
 import '../state.dart';
+import 'ana_sayfa.dart' show ucretsizMetni;
 import 'durum.dart';
 import 'premium.dart';
 import 'soru_karti.dart';
 import 'tema.dart';
 
 class SinavSayfasi extends StatelessWidget {
-  const SinavSayfasi({super.key, required this.limit, required this.onBasla});
+  const SinavSayfasi({super.key, required this.limit, required this.onBasla, required this.onYanlisCalis});
 
   /// Hak bittiği için sınav başlatılamadı.
   final bool limit;
   final VoidCallback onBasla;
 
+  /// Sonuç ekranından "Yanlışlarını çalış".
+  final VoidCallback onYanlisCalis;
+
   @override
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
     final x = s.sinav;
-    if (limit && !s.premium) {
+    if (limit && !s.premium && (x == null || x.bitti)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 18,
         children: [
-          Semantics(liveRegion: true, child: Kart(child: Text(s.t('examLimit', {'n': ucretsizSinav})))),
+          Semantics(
+            liveRegion: true,
+            child: Kart(key: const ValueKey('sinav-limit'), child: Text(s.t('freeNone'))),
+          ),
           const PremiumIcerik(),
         ],
       );
     }
     if (x == null) {
+      final kalan = s.ucretsizKalanSinav;
       return Kart(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -39,12 +47,13 @@ class SinavSayfasi extends StatelessWidget {
           children: [
             Baslik(s.t('exam')),
             Text(s.t('examInfo')),
+            if (kalan != null) SolukMetin(ucretsizMetni(s, kalan)),
             FilledButton(key: const ValueKey('basla'), onPressed: onBasla, child: Text(s.t('startExam'))),
           ],
         ),
       );
     }
-    if (x.bitti) return _Sonuc(sinav: x, onBasla: onBasla);
+    if (x.bitti) return _Sonuc(sinav: x, onBasla: onBasla, onYanlisCalis: onYanlisCalis);
     return _Devam(sinav: x);
   }
 }
@@ -54,7 +63,8 @@ String _saat(Duration d) {
   return '${(sn ~/ 60).toString().padLeft(2, '0')}:${(sn % 60).toString().padLeft(2, '0')}';
 }
 
-/// Saniyelik geri sayım; süre dolunca sınavı bitirir.
+/// Saniyelik geri sayım; süre dolunca sınavı bitirir. (Sekme kapalıyken de Kabuk zamanlayıcısı
+/// ve AppState.sinav erişimi süreyi denetler.)
 class SinavSayaci extends StatefulWidget {
   const SinavSayaci({super.key, required this.state});
   final AppState state;
@@ -70,7 +80,7 @@ class _SinavSayaciDurumu extends State<SinavSayaci> {
   Duration _hesapla() {
     final x = widget.state.sinav;
     if (x == null || x.bitti) return Duration.zero;
-    final ms = x.bitis.difference(DateTime.now()).inMilliseconds;
+    final ms = x.bitis.difference(widget.state.simdi()).inMilliseconds;
     if (ms <= 0) return Duration.zero;
     return Duration(seconds: (ms + 999) ~/ 1000);
   }
@@ -88,7 +98,7 @@ class _SinavSayaciDurumu extends State<SinavSayaci> {
     if (k <= Duration.zero) {
       _zamanlayici?.cancel();
       _zamanlayici = null;
-      widget.state.sinavBitir();
+      widget.state.sureKontrol();
       return;
     }
     setState(() => _kalan = k);
@@ -178,10 +188,7 @@ class _Devam extends StatelessWidget {
         ),
         FilledButton(
           key: const ValueKey('bitir'),
-          onPressed: () {
-            s.sinavBitir();
-            ustuneKaydir(context);
-          },
+          onPressed: () => _bitir(context, s, x),
           child: Text(s.t('finish')),
         ),
         if (x.bos > 0) SolukMetin(s.t('left', {'n': x.bos})),
@@ -190,10 +197,40 @@ class _Devam extends StatelessWidget {
   }
 }
 
+/// Boş soru varsa onay ister, sonra sınavı bitirir.
+Future<void> _bitir(BuildContext context, AppState s, Sinav x) async {
+  if (x.bos > 0) {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        key: const ValueKey('bitir-dialog'),
+        title: Text(s.t('confirmFinishTitle')),
+        content: Text(s.t('confirmFinishBody', {'n': x.bos})),
+        actions: [
+          TextButton(
+            key: const ValueKey('bitir-vazgec'),
+            onPressed: () => Navigator.of(c).pop(false),
+            child: Text(s.t('cancel')),
+          ),
+          FilledButton(
+            key: const ValueKey('bitir-onay'),
+            onPressed: () => Navigator.of(c).pop(true),
+            child: Text(s.t('confirmFinish')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+  }
+  s.sinavBitir();
+  ustuneKaydir(context);
+}
+
 class _Sonuc extends StatelessWidget {
-  const _Sonuc({required this.sinav, required this.onBasla});
+  const _Sonuc({required this.sinav, required this.onBasla, required this.onYanlisCalis});
   final Sinav sinav;
   final VoidCallback onBasla;
+  final VoidCallback onYanlisCalis;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +239,7 @@ class _Sonuc extends StatelessWidget {
     final x = sinav;
     final puan = x.puan;
     final gecti = x.gecti;
+    final yanlis = x.sorular.length - puan;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 14,
@@ -240,10 +278,23 @@ class _Sonuc extends StatelessWidget {
                 ),
               ),
               Text(s.t('score', {'n': puan})),
-              FilledButton(key: const ValueKey('tekrar'), onPressed: onBasla, child: Text(s.t('again'))),
+              Text(
+                s.t('wrongCount', {'n': yanlis}),
+                key: const ValueKey('yanlis-adet'),
+                style: TextStyle(fontWeight: FontWeight.w700, color: yanlis > 0 ? r.yanlis : r.dogru),
+              ),
+              if (gecti) Text(s.t('passCongrats')),
+              if (yanlis > 0)
+                FilledButton(
+                  key: const ValueKey('yanlis-calis'),
+                  onPressed: onYanlisCalis,
+                  child: Text(s.t('studyWrongs', {'n': yanlis})),
+                ),
+              OutlinedButton(key: const ValueKey('tekrar'), onPressed: onBasla, child: Text(s.t('again'))),
             ],
           ),
         ),
+        if (!s.premium) _Teklif(yanlis: yanlis, kaldi: !gecti),
         SolukMetin(s.t('review')),
         NumaraSeridi(sinav: x),
         Kart(
@@ -261,6 +312,44 @@ class _Sonuc extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Sonuç anındaki Premium teklifi: kaldıysa vurgulu, geçtiyse sade.
+class _Teklif extends StatelessWidget {
+  const _Teklif({required this.yanlis, required this.kaldi});
+  final int yanlis;
+  final bool kaldi;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = DurumKapsami.of(context);
+    final r = Renk.of(context);
+    final fiyat = s.billing.fiyat;
+    final kilitli = yanlis - ucretsizYanlis;
+    return Container(
+      key: const ValueKey('sonuc-teklif'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kaldi ? r.yanlisZemin : r.sayfa,
+        border: Border.all(color: kaldi ? r.yanlis : r.cizgi, width: kaldi ? 1.5 : 1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Baslik(kilitli > 0 ? s.t('offerPersonal', {'n': kilitli}) : s.t('offerGeneric')),
+          if (kaldi) Text(s.t('failHint')),
+          if (kilitli > 0) SolukMetin(s.t('firstFree', {'n': ucretsizYanlis})),
+          FilledButton(
+            key: const ValueKey('sonuc-premium'),
+            onPressed: () => premiumAc(context),
+            child: Text(fiyat != null ? s.t('buyShort', {'p': fiyat}) : s.t('open')),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -334,6 +423,7 @@ class _Kutu extends StatelessWidget {
         selected: simdi,
         label: '$no',
         excludeSemantics: true,
+        onTap: onTap,
         child: Material(
           color: zemin,
           clipBehavior: Clip.antiAlias,

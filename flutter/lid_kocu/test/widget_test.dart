@@ -4,8 +4,8 @@ import 'package:lid_kocu/state.dart';
 import 'package:lid_kocu/ui/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<AppState> _kur(WidgetTester t) async {
-  SharedPreferences.setMockInitialValues({});
+Future<AppState> _kur(WidgetTester t, [Map<String, Object> ilk = const {'kurulum': true}]) async {
+  SharedPreferences.setMockInitialValues(ilk);
   final s = await t.runAsync(() => AppState.olustur(sesli: false));
   return s!;
 }
@@ -90,5 +90,174 @@ void main() {
     expect(t.widget<Text>(find.byKey(const ValueKey('puan'))).data, '${s.sinav!.puan} / 33');
     expect(find.byKey(const ValueKey('tekrar')), findsOneWidget);
     expect(find.byKey(const ValueKey('sayac')), findsNothing);
+
+    // Satış anı: yanlış sayısı, "Yanlışlarını çalış" ve Premium teklifi.
+    final yanlis = 33 - s.sinav!.puan;
+    expect(yanlis, greaterThan(0));
+    expect(find.text(s.t('wrongCount', {'n': yanlis})), findsOneWidget);
+    expect(find.byKey(const ValueKey('sonuc-teklif')), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('yanlis-calis')));
+    await t.pumpAndSettle();
+    expect(s.calisFiltre, filtreSinav);
+    expect(find.text(s.t('q', {'a': 1, 'b': yanlis})), findsOneWidget);
+    expect(find.text(s.t('wrongsCount', {'n': yanlis})), findsOneWidget);
+    // İlk 3 yanlışın açıklaması ücretsiz: cevaplayınca kilit düğmesi çıkmaz.
+    await t.tap(find.byKey(const ValueKey('secenek-0')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('premium-ac')), findsNothing);
+  });
+
+  testWidgets('bos soru varken bitir onay ister; vazgecince sinav surer', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    s.dilSec('tr');
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sekme-sinav')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('basla')));
+    await t.pumpAndSettle();
+
+    await t.tap(find.byKey(const ValueKey('bitir')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('bitir-dialog')), findsOneWidget);
+    expect(find.text(s.t('confirmFinishBody', {'n': 33})), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('bitir-vazgec')));
+    await t.pumpAndSettle();
+    expect(s.sinav!.bitti, isFalse);
+    expect(s.sinavSayisi, 0);
+
+    await t.tap(find.byKey(const ValueKey('bitir')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('bitir-onay')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('sonuc')), findsOneWidget);
+    expect(s.sinavSayisi, 1);
+  });
+
+  testWidgets('ana sayfadan sinava basla devam eden sinavi silmez', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('basla-ana')));
+    await t.pumpAndSettle();
+    final ilk = s.sinav;
+    await t.tap(find.byKey(const ValueKey('secenek-0')));
+    await t.pump();
+    await t.tap(find.byKey(const ValueKey('sekme-ana')));
+    await t.pumpAndSettle();
+    expect(find.text(s.t('continueExam')), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('basla-ana')));
+    await t.pumpAndSettle();
+    expect(identical(s.sinav, ilk), isTrue);
+    expect(s.sinav!.cevaplar.first, 0);
+  });
+
+  testWidgets('ilk acilis: dil + eyalet secimi, uyari, sonra ana sayfa', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t, const {});
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    expect(s.kurulumTamam, isFalse);
+    for (final d in diller) {
+      expect(find.byKey(ValueKey('kur-dil-$d')), findsOneWidget);
+    }
+    expect(find.text(s.t('hero')), findsNothing);
+
+    // Arapçada kurulum ekranı da sağdan sola.
+    await t.tap(find.byKey(const ValueKey('kur-dil-ar')));
+    await t.pumpAndSettle();
+    expect(Directionality.of(t.element(find.byKey(const ValueKey('kurulum-devam')))), TextDirection.rtl);
+
+    await t.tap(find.byKey(const ValueKey('kur-dil-tr')));
+    await t.pumpAndSettle();
+    expect(s.dil, 'tr');
+    await t.tap(find.byKey(const ValueKey('kurulum-devam')));
+    await t.pumpAndSettle();
+    expect(find.text(s.t('dis')), findsWidgets);
+
+    // Eyalet seçilmeden başlanamaz.
+    await t.tap(find.byKey(const ValueKey('kurulum-bitir')));
+    await t.pumpAndSettle();
+    expect(s.kurulumTamam, isFalse);
+
+    await t.tap(find.byKey(const ValueKey('kur-eyalet-bayern')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('kurulum-bitir')));
+    await t.pumpAndSettle();
+    expect(s.kurulumTamam, isTrue);
+    expect(s.eyalet, 'bayern');
+    expect(find.text(s.t('hero')), findsOneWidget);
+
+    final p = await SharedPreferences.getInstance();
+    expect(p.getBool('kurulum'), isTrue);
+    final s2 = await t.runAsync(() => AppState.olustur(sesli: false));
+    expect(s2!.kurulumTamam, isTrue);
+    expect(s2.eyalet, 'bayern');
+  });
+
+  testWidgets('calisma konumu sekme degisince ve yeniden acilinca korunur', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    s.dilSec('tr');
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sekme-calis')));
+    await t.pumpAndSettle();
+    final n = s.havuz.length;
+    expect(find.text(s.t('q', {'a': 1, 'b': n})), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('secenek-0')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sonraki-soru')));
+    await t.pumpAndSettle();
+    expect(find.text(s.t('q', {'a': 2, 'b': n})), findsOneWidget);
+
+    await t.tap(find.byKey(const ValueKey('sekme-ana')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sekme-calis')));
+    await t.pumpAndSettle();
+    expect(find.text(s.t('q', {'a': 2, 'b': n})), findsOneWidget);
+
+    final s2 = await t.runAsync(() => AppState.olustur(sesli: false));
+    expect(s2!.calisBaslangic(filtreTumu, s2.calismaListesi(filtreTumu)), 1);
+  });
+
+  testWidgets('yanlislarim: sayi gorunur, ilk 3 ucretsiz, sonra kilit', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    // 5 soruyu yanlış işaretle.
+    for (final q in s.havuz.take(5)) {
+      s.cevapla(q, (q.dogru + 1) % 4);
+    }
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sekme-calis')));
+    await t.pumpAndSettle();
+    s.calisFiltreSec(filtreYanlis);
+    await t.pumpAndSettle();
+    expect(find.text(s.t('wrongsCount', {'n': 5})), findsOneWidget);
+    for (var i = 0; i < 3; i++) {
+      expect(find.byKey(const ValueKey('yanlis-kilit')), findsNothing);
+      await t.tap(find.byKey(const ValueKey('secenek-0')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const ValueKey('sonraki-soru')));
+      await t.pumpAndSettle();
+    }
+    expect(find.byKey(const ValueKey('yanlis-kilit')), findsOneWidget);
+    expect(find.text(s.t('lockedRest', {'n': 2})), findsOneWidget);
+  });
+
+  testWidgets('dinle dugmesi ucretsiz kullaniciya kilitli gorunur', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    s.dilSec('de');
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('dinle')), findsOneWidget);
+    expect(find.byIcon(Icons.lock), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('dinle')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('satin-al')), findsOneWidget);
   });
 }

@@ -83,7 +83,9 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
       r = null;
     }
     if (mounted) setState(() => _mesgul = false);
-    final anahtar = r == true ? 'owned' : (r == false ? 'noPurchase' : 'failed2');
+    final anahtar = r == true
+        ? 'owned'
+        : (r == false ? (s.billing.bekleyenVar ? 'pending' : 'noPurchase') : 'failed2');
     m.showSnackBar(SnackBar(content: Text(s.t(anahtar))));
   }
 
@@ -105,6 +107,12 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
             ),
           ),
           Text(s.t('premiumSub'), style: const TextStyle(height: 1.5)),
+          if (!s.premium && s.yanlislar.isNotEmpty)
+            Text(
+              s.t('offerPersonal', {'n': s.yanlislar.length}),
+              key: const ValueKey('premium-kisisel'),
+              style: TextStyle(fontWeight: FontWeight.w700, color: r.vurgu, height: 1.4),
+            ),
           for (final k in const ['pf1', 'pf2', 'pf3', 'pf4'])
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,

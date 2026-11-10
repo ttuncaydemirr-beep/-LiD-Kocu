@@ -40,6 +40,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Sabit sürüm: in_app_purchase_android 0.5.x (Billing Library 8+) bu sürümle çözülür.
+          flutter-version: 3.47.9
           cache: true
       - run: flutter --version
       - run: flutter pub get

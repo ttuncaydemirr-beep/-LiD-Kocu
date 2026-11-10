@@ -1,5 +1,7 @@
 // LiD Koçu — uygulama durumu. Arayüz yalnızca bu sınıfla konuşur.
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -14,6 +16,14 @@ const String destekEposta = 'nilkaren.tuncay.demir@gmail.com';
 const String kaynakUrl =
     'https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf';
 const String testMerkeziUrl = 'https://oet.bamf.de/ords/oetut/f?p=514:1:0';
+
+/// Çalış sekmesi süzgeçleri.
+const String filtreTumu = 'all';
+const String filtreYanlis = 'wrongs';
+const String filtreSinav = 'exam';
+
+/// Sesli dinleme sonucu.
+enum SesSonucu { tamam, kilitli, dilYok, hata }
 
 class Metin {
   final Map<String, Map<String, String>> _m;
@@ -37,22 +47,56 @@ class AppState extends ChangeNotifier {
   final SharedPreferences? _p;
   final Billing billing;
   final FlutterTts? _tts;
+  final Map<String, Soru> _soruIndeksi;
+
+  /// Saat kaynağı. Testlerde değiştirilir (gün değişimi, süre dolması).
+  @visibleForTesting
+  DateTime Function() saat = DateTime.now;
+  DateTime simdi() => saat();
 
   String dil;
   String eyalet;
+  bool kurulumTamam;
   final Map<String, bool> sonuclar;
-  int sinavSayisi;
-  Sinav? sinav;
 
-  AppState._(this.katalog, this.ceviriler, this.metin, this._p, this.billing, this._tts,
-      {required this.dil, required this.eyalet, required this.sonuclar, required this.sinavSayisi}) {
+  /// Premium olmadan bitirilen başlangıç denemeleri (en çok [ucretsizSinav]).
+  int sinavSayisi;
+
+  /// Günlük ücretsiz denemenin son kullanıldığı gün (gunAnahtari).
+  String? gunlukTarih;
+  Sinav? _sinav;
+  final List<SinavKaydi> gecmis;
+
+  /// Son bitmiş denemenin yanlış/boş soruları ("Yanlışlarını çalış").
+  List<Soru>? sonSinavYanlislari;
+
+  // Çalış sekmesi
+  String calisFiltre = filtreTumu;
+  bool karisik;
+  int karisikTohum;
+  final Map<String, String> _calisKonum;
+
+  bool _atildi = false;
+
+  AppState._(this.katalog, this.ceviriler, this.metin, this._p, this.billing, this._tts, this._soruIndeksi,
+      {required this.dil,
+      required this.eyalet,
+      required this.kurulumTamam,
+      required this.sonuclar,
+      required this.sinavSayisi,
+      required this.gunlukTarih,
+      required this.gecmis,
+      required this.karisik,
+      required this.karisikTohum,
+      required Map<String, String> calisKonum})
+      : _calisKonum = calisKonum {
     billing.degisti = (v) {
       _p?.setBool('premium', v);
-      notifyListeners();
+      _bildir();
     };
   }
 
-  /// Testlerde [prefs] ve [tts] verilmeyebilir.
+  /// Testlerde sesli: false verilir: ses ve Play Billing başlatılmaz.
   static Future<AppState> olustur({bool sesli = true}) async {
     final k = Katalog.json(jsonDecode(await rootBundle.loadString('assets/katalog.json')) as Map<String, dynamic>);
     final c = Ceviriler(jsonDecode(await rootBundle.loadString('assets/ceviriler.json')) as Map<String, dynamic>);
@@ -63,19 +107,53 @@ class AppState extends ChangeNotifier {
     } catch (_) {}
     final cihaz = PlatformDispatcher.instance.locale.languageCode;
     final dil = p?.getString('dil') ?? (diller.contains(cihaz) ? cihaz : 'en');
-    Map<String, bool> s = {};
-    try {
-      final raw = p?.getString('sonuclar');
-      if (raw != null) s = (jsonDecode(raw) as Map<String, dynamic>).map((a, b) => MapEntry(a, b == true));
-    } catch (_) {}
+
+    T? oku<T>(String anahtar, T Function(Object? j) cevir) {
+      try {
+        final raw = p?.getString(anahtar);
+        return raw == null ? null : cevir(jsonDecode(raw));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final s = oku('sonuclar', (j) => (j as Map<String, dynamic>).map((a, b) => MapEntry(a, b == true))) ??
+        <String, bool>{};
+    final gecmis = oku('gecmis', (j) => (j as List).map(SinavKaydi.fromJson).whereType<SinavKaydi>().toList()) ?? <SinavKaydi>[];
+    final konum = oku('calisKonum', (j) => (j as Map<String, dynamic>).map((a, b) => MapEntry(a, b.toString()))) ??
+        <String, String>{};
+
+    final indeks = <String, Soru>{
+      for (final x in k.genel) x.id: x,
+      for (final e in k.eyaletler.values)
+        for (final x in e.sorular) x.id: x,
+    };
+
     final b = Billing(sahip: p?.getBool('premium') ?? false);
-    final st = AppState._(k, c, m, p, b, sesli ? FlutterTts() : null,
+    // Eski sürümden gelenler (ayar kaydı olan) kurulum ekranını görmez.
+    final kurulum = p?.getBool('kurulum') ?? (p?.containsKey('eyalet') == true || p?.containsKey('sonuclar') == true);
+    final st = AppState._(k, c, m, p, b, sesli ? FlutterTts() : null, indeks,
         dil: dil,
         eyalet: p?.getString('eyalet') ?? 'berlin',
+        kurulumTamam: kurulum,
         sonuclar: s,
-        sinavSayisi: p?.getInt('sinavSayisi') ?? 0);
-    if (sesli) await b.baslat();
+        sinavSayisi: p?.getInt('sinavSayisi') ?? 0,
+        gunlukTarih: p?.getString('gunlukTarih'),
+        gecmis: gecmis,
+        karisik: p?.getBool('karisik') ?? false,
+        karisikTohum: p?.getInt('karisikTohum') ?? 1,
+        calisKonum: konum);
+    final f = p?.getString('calisFiltre');
+    if (f == filtreYanlis) st.calisFiltre = filtreYanlis;
+    st._sinav = oku('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
+    st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
+    // Play bağlantısı ilk ekranı bekletmez.
+    if (sesli) unawaited(b.baslat());
     return st;
+  }
+
+  void _bildir() {
+    if (!_atildi) notifyListeners();
   }
 
   // ---- metin ve çeviri
@@ -94,19 +172,35 @@ class AppState extends ChangeNotifier {
 
   // ---- premium
   bool get premium => billing.sahip;
-  bool aciklamaAcik(Soru s) => premium || ornekAciklama(s.id);
-  bool get sinavAcik => premium || sinavSayisi < ucretsizSinav;
+
+  /// Premium olmadan açık açıklama: örnek sorular, günün sorusu veya [ucretsiz] (yanlış listesinin ilk 3'ü).
+  bool ucretsizAciklama(Soru s, {bool ucretsiz = false}) =>
+      ucretsiz || ornekAciklama(s.id) || s.id == gununSorusu.id;
+  bool aciklamaAcik(Soru s, {bool ucretsiz = false}) => premium || ucretsizAciklama(s, ucretsiz: ucretsiz);
+
+  bool get sinavAcik =>
+      premium || ucretsizSinavVar(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
+
+  /// Bugün kalan ücretsiz deneme; Premium'da null.
+  int? get ucretsizKalanSinav =>
+      premium ? null : ucretsizKalan(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
 
   Future<SatinAlmaSonucu> satinAl() async {
     final r = await billing.satinAl();
-    notifyListeners();
+    _bildir();
     return r;
   }
 
   Future<bool?> geriYukle() async {
     final r = await billing.geriYukle();
-    notifyListeners();
+    _bildir();
     return r;
+  }
+
+  /// Uygulama ön plana döndü: süreyi denetle, satın almaları sessizce yenile.
+  void onPlanaDondu() {
+    sureKontrol();
+    unawaited(billing.yenile());
   }
 
   // ---- ayarlar
@@ -114,14 +208,24 @@ class AppState extends ChangeNotifier {
     if (!diller.contains(d)) return;
     dil = d;
     _p?.setString('dil', d);
-    notifyListeners();
+    _bildir();
   }
 
   void eyaletSec(String e) {
     if (!katalog.eyaletler.containsKey(e)) return;
     eyalet = e;
     _p?.setString('eyalet', e);
-    notifyListeners();
+    _bildir();
+  }
+
+  /// İlk açılış akışının sonu (dil zaten dilSec ile kaydedildi).
+  void kurulumuBitir(String e) {
+    eyalet = katalog.eyaletler.containsKey(e) ? e : eyalet;
+    kurulumTamam = true;
+    _p?.setString('dil', dil);
+    _p?.setString('eyalet', eyalet);
+    _p?.setBool('kurulum', true);
+    _bildir();
   }
 
   // ---- çalışma
@@ -131,47 +235,148 @@ class AppState extends ChangeNotifier {
 
   Soru get gununSorusu {
     final g = katalog.genel;
-    final gun = DateTime.now().difference(DateTime(2026)).inDays;
+    final n = simdi();
+    final gun = DateTime.utc(n.year, n.month, n.day).difference(DateTime.utc(2026)).inDays;
     return g[gun % g.length];
   }
 
   void cevapla(Soru s, int secim) {
     sonuclar[s.id] = secim == s.dogru;
     _kaydet();
-    notifyListeners();
+    _bildir();
   }
 
   void _kaydet() => _p?.setString('sonuclar', jsonEncode(sonuclar));
 
+  /// Süzgece göre çalışma listesi (karışık sıra seçiliyse kalıcı tohumla karıştırılır).
+  List<Soru> calismaListesi(String filtre) {
+    final l = switch (filtre) {
+      filtreYanlis => yanlislar,
+      filtreSinav => [...?sonSinavYanlislari],
+      _ => havuz,
+    };
+    if (karisik && filtre != filtreSinav) l.shuffle(Random(karisikTohum));
+    return l;
+  }
+
+  /// Süzgeçte kalınan sorunun sırası (kayıtlı soru listede yoksa 0).
+  int calisBaslangic(String filtre, List<Soru> l) {
+    final id = _calisKonum[filtre];
+    if (id == null) return 0;
+    final i = l.indexWhere((s) => s.id == id);
+    return i < 0 ? 0 : i;
+  }
+
+  void calisKonumKaydet(String filtre, String soruId) {
+    _calisKonum[filtre] = soruId;
+    if (filtre != filtreSinav) _p?.setString('calisKonum', jsonEncode(_calisKonum));
+  }
+
+  void calisFiltreSec(String f) {
+    if (f == filtreSinav && sonSinavYanlislari == null) return;
+    calisFiltre = f;
+    if (f != filtreSinav) _p?.setString('calisFiltre', f);
+    _bildir();
+  }
+
+  void karisikSec(bool v) {
+    karisik = v;
+    if (v) karisikTohum = Random().nextInt(1 << 30) + 1;
+    _p?.setBool('karisik', v);
+    _p?.setInt('karisikTohum', karisikTohum);
+    _bildir();
+  }
+
+  // ---- hazırlık göstergesi
+  /// Son 3 bitmiş denemenin ortalama puanı; geçmiş yoksa null.
+  double? get son3Ortalama {
+    if (gecmis.isEmpty) return null;
+    final son = gecmis.reversed.take(3).toList();
+    return son.fold<int>(0, (a, k) => a + k.puan) / son.length;
+  }
+
+  /// Hazırlık yüzdesi: doğru bilinen soru oranı; deneme varsa son 3 deneme ortalamasıyla yarı yarıya.
+  int get hazirlik {
+    final h = havuz.length;
+    final oran = h == 0 ? 0.0 : dogruSayisi / h;
+    final o = son3Ortalama;
+    final x = o == null ? oran : (oran + o / sinavSoruSayisi) / 2;
+    return (x * 100).round().clamp(0, 100).toInt();
+  }
+
   // ---- sınav
-  /// Hak yoksa false döner; arayüz Premium ekranını gösterir.
+  /// Devam eden sınav. Süresi dolmuşsa okunurken biter (sekme açık olmasa da).
+  Sinav? get sinav {
+    if (_sureKontrol(bildir: false)) scheduleMicrotask(_bildir);
+    return _sinav;
+  }
+
+  bool get sinavDevamEdiyor {
+    final x = sinav;
+    return x != null && !x.bitti;
+  }
+
+  /// Süre dolduysa sınavı bitirir. Bitirdiyse true.
+  bool sureKontrol() => _sureKontrol(bildir: true);
+
+  bool _sureKontrol({required bool bildir}) {
+    final x = _sinav;
+    if (x == null || x.bitti || !x.suresiDoldu(simdi())) return false;
+    _bitir(x);
+    if (bildir) _bildir();
+    return true;
+  }
+
+  /// Devam eden sınav varsa ona devam edilir (true). Yoksa hak varsa yeni sınav başlar.
+  /// Hak yoksa false döner; arayüz Premium ekranını gösterir. Hak sınav BİTİNCE düşer;
+  /// aynı anda en çok bir başlamış-bitmemiş sınav olabilir, böylece sınır atlatılamaz.
   bool sinavBaslat() {
-    if (!sinavAcik) return false;
-    sinav = Sinav(katalog.sinavSec(eyalet), DateTime.now());
-    sinavSayisi++;
-    _p?.setInt('sinavSayisi', sinavSayisi);
-    notifyListeners();
+    _sureKontrol(bildir: false);
+    final x = _sinav;
+    if (x != null && !x.bitti) {
+      _bildir();
+      return true;
+    }
+    if (!sinavAcik) {
+      _bildir();
+      return false;
+    }
+    _sinav = Sinav(katalog.sinavSec(eyalet), simdi());
+    _sinavKaydet();
+    unawaited(sesDurdur());
+    _bildir();
     return true;
   }
 
   void sinavCevap(int secim) {
-    final x = sinav;
+    if (_sureKontrol(bildir: true)) return; // süre dolduktan sonra cevap kabul edilmez
+    final x = _sinav;
     if (x == null || x.bitti) return;
     x.cevaplar[x.sira] = secim;
     if (x.sira < x.sorular.length - 1) x.sira++;
-    notifyListeners();
+    unawaited(sesDurdur());
+    _sinavKaydet();
+    _bildir();
   }
 
   void sinavGit(int i) {
-    final x = sinav;
+    _sureKontrol(bildir: false);
+    final x = _sinav;
     if (x == null || i < 0 || i >= x.sorular.length) return;
     x.sira = i;
-    notifyListeners();
+    unawaited(sesDurdur());
+    if (!x.bitti) _sinavKaydet();
+    _bildir();
   }
 
   void sinavBitir() {
-    final x = sinav;
+    final x = _sinav;
     if (x == null || x.bitti) return;
+    _bitir(x);
+    _bildir();
+  }
+
+  void _bitir(Sinav x) {
     x.bitti = true;
     x.sira = 0;
     for (var i = 0; i < x.sorular.length; i++) {
@@ -179,35 +384,79 @@ class AppState extends ChangeNotifier {
       if (c != null) sonuclar[x.sorular[i].id] = c == x.sorular[i].dogru;
     }
     _kaydet();
-    notifyListeners();
+    if (!premium) {
+      final (b, g) = ucretsizHakDus(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
+      sinavSayisi = b;
+      gunlukTarih = g;
+      _p?.setInt('sinavSayisi', b);
+      if (g != null) _p?.setString('gunlukTarih', g);
+    }
+    final tarih = simdi().isAfter(x.bitis) ? x.bitis : simdi();
+    gecmis.add(SinavKaydi(tarih, x.puan));
+    if (gecmis.length > 50) gecmis.removeRange(0, gecmis.length - 50);
+    _p?.setString('gecmis', jsonEncode([for (final k in gecmis) k.toJson()]));
+    _p?.remove('sinavDevam');
+    unawaited(sesDurdur());
+  }
+
+  void _sinavKaydet() {
+    final x = _sinav;
+    if (x == null || x.bitti) return;
+    _p?.setString('sinavDevam', jsonEncode(x.toJson()));
+  }
+
+  /// Sonuç ekranındaki "Yanlışlarını çalış": son sınavın yanlışlarını Çalış sekmesinde açar.
+  void sonSinavYanlisCalis() {
+    final x = _sinav;
+    if (x == null || !x.bitti) return;
+    sonSinavYanlislari = x.yanlislar;
+    _calisKonum.remove(filtreSinav);
+    calisFiltre = filtreSinav;
+    _bildir();
   }
 
   void sinavKapat() {
-    sinav = null;
-    notifyListeners();
+    _sinav = null;
+    _p?.remove('sinavDevam');
+    _bildir();
   }
 
   // ---- ses (Premium)
-  Future<void> dinle(Soru s) async {
+  /// Almanca soruyu ve şıkları okur. Almanca ses yoksa [SesSonucu.dilYok] döner (arayüz yardım gösterir).
+  Future<SesSonucu> dinle(Soru s) async {
+    if (!premium) return SesSonucu.kilitli;
     final tts = _tts;
-    if (tts == null || !premium) return;
+    if (tts == null) return SesSonucu.hata;
     try {
       await tts.stop();
-      await tts.setLanguage('de-DE');
+      final mevcut = await tts.isLanguageAvailable('de-DE');
+      if (mevcut != true && mevcut != 1) return SesSonucu.dilYok;
+      final dilOk = await tts.setLanguage('de-DE');
+      if (dilOk == 0 || dilOk == false) return SesSonucu.dilYok;
       await tts.setSpeechRate(0.45);
       final metin = [s.de, for (var i = 0; i < s.secenekler.length; i++) '${i + 1}. ${s.secenekler[i]}'].join('. ');
-      await tts.speak(metin);
-    } catch (_) {}
+      final r = await tts.speak(metin);
+      if (r == 0 || r == false) return SesSonucu.hata;
+      return SesSonucu.tamam;
+    } catch (e) {
+      if (kDebugMode) debugPrint('TTS: $e');
+      return SesSonucu.hata;
+    }
   }
 
   Future<void> sesDurdur() async {
+    final tts = _tts;
+    if (tts == null) return;
     try {
-      await _tts?.stop();
-    } catch (_) {}
+      await tts.stop();
+    } catch (e) {
+      if (kDebugMode) debugPrint('TTS stop: $e');
+    }
   }
 
   @override
   void dispose() {
+    _atildi = true;
     billing.kapat();
     super.dispose();
   }

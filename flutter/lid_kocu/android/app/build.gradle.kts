@@ -40,7 +40,8 @@ android {
         applicationId = "com.lidkocu.app"
         minSdk = 24
         targetSdk = 36
-        // pubspec.yaml: version: 1.0.0+2  →  versionName 1.0.0, versionCode 2
+        // Sürüm pubspec.yaml'dan gelir: "version: 1.0.0+2" → versionName 1.0.0, versionCode 2.
+        // Play'e her yüklemede pubspec'teki +N artırılmalı (aynı versionCode ikinci kez yüklenemez).
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

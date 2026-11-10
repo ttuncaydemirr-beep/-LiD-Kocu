@@ -92,7 +92,7 @@ class Ceviriler {
     return d is Map<String, dynamic> ? Ceviri.json(d) : null;
   }
 
-  /// Resmî Almanca görsel açıklamaları.
+  /// Almanca görsel açıklamaları (sınavdaki resmin yazılı tarifi).
   List<String> gorsel(String id) => al(id, 'de')?.gorsel ?? const [];
 }
 
@@ -100,12 +100,16 @@ class Sinav {
   final List<Soru> sorular;
   final List<int?> cevaplar;
   final DateTime bitis;
-  int sira = 0;
+  int sira;
   bool bitti = false;
 
   Sinav(this.sorular, DateTime baslangic)
       : cevaplar = List<int?>.filled(sorular.length, null),
-        bitis = baslangic.add(sinavSuresi);
+        bitis = baslangic.add(sinavSuresi),
+        sira = 0;
+
+  /// Kaydedilmiş (devam eden) sınavı geri kurar.
+  Sinav.kayit({required this.sorular, required this.cevaplar, required this.bitis, this.sira = 0});
 
   int get puan {
     var n = 0;
@@ -117,10 +121,95 @@ class Sinav {
 
   bool get gecti => puan >= gecmeNotu;
   int get bos => cevaplar.where((c) => c == null).length;
+
+  /// Yanlış veya boş bırakılan sorular (sınavdaki sırayla).
+  List<Soru> get yanlislar => [
+        for (var i = 0; i < sorular.length; i++)
+          if (cevaplar[i] != sorular[i].dogru) sorular[i],
+      ];
+
+  bool suresiDoldu(DateTime simdi) => !simdi.isBefore(bitis);
+
+  Map<String, Object?> toJson() => {
+        'ids': [for (final s in sorular) s.id],
+        'c': cevaplar,
+        'bitis': bitis.millisecondsSinceEpoch,
+        'sira': sira,
+      };
+
+  /// [soruBul] kimlikten soruyu verir. Kayıt bozuksa veya soru artık yoksa null.
+  static Sinav? fromJson(Map<String, dynamic> j, Soru? Function(String id) soruBul) {
+    try {
+      final ids = (j['ids'] as List).map((e) => e.toString()).toList();
+      final c = (j['c'] as List).map((e) => e is int ? e : null).toList();
+      if (ids.isEmpty || ids.length != c.length) return null;
+      final sorular = <Soru>[];
+      for (final id in ids) {
+        final s = soruBul(id);
+        if (s == null) return null;
+        sorular.add(s);
+      }
+      final sira = (j['sira'] as int?) ?? 0;
+      return Sinav.kayit(
+        sorular: sorular,
+        cevaplar: c,
+        bitis: DateTime.fromMillisecondsSinceEpoch(j['bitis'] as int),
+        sira: sira.clamp(0, sorular.length - 1).toInt(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
-/// Ücretsiz örnek açıklamalar: ilk 20 genel soru.
+/// Bitmiş deneme sınavı kaydı (geçmiş).
+class SinavKaydi {
+  final DateTime tarih;
+  final int puan;
+  const SinavKaydi(this.tarih, this.puan);
+
+  Map<String, Object> toJson() => {'t': tarih.millisecondsSinceEpoch, 'p': puan};
+  static SinavKaydi? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final t = j['t'], p = j['p'];
+    if (t is! int || p is! int) return null;
+    return SinavKaydi(DateTime.fromMillisecondsSinceEpoch(t), p);
+  }
+}
+
+/// Ücretsiz örnek açıklamalar: ilk 20 genel soru. (Günün sorusu ve yanlış listelerindeki ilk 3 soru
+/// AppState.aciklamaAcik içinde ayrıca açılır.)
 bool ornekAciklama(String id) {
   final n = int.tryParse(id);
   return n != null && n <= 20;
+}
+
+/// Yanlış listelerinde Premium olmadan açıklaması açık soru sayısı.
+const int ucretsizYanlis = 3;
+
+/// Takvim günü anahtarı (yerel saat), ör. "2026-11-11".
+String gunAnahtari(DateTime t) =>
+    '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}';
+
+/// Ücretsiz deneme kuralı: önce [ucretsizSinav] başlangıç hakkı, bunlar bitince her gün 1 deneme.
+/// [bitmis]: Premium olmadan bitirilen başlangıç denemeleri; [gunlukTarih]: günlük hakkın son kullanıldığı gün.
+/// Hak sınav BİTİNCE düşer (bkz. [ucretsizHakDus]).
+bool ucretsizSinavVar({required int bitmis, required String? gunlukTarih, required DateTime simdi}) =>
+    bitmis < ucretsizSinav || gunlukTarih != gunAnahtari(simdi);
+
+/// Kalan ücretsiz deneme sayısı (bugün için).
+int ucretsizKalan({required int bitmis, required String? gunlukTarih, required DateTime simdi}) {
+  if (bitmis < ucretsizSinav) return ucretsizSinav - bitmis;
+  return gunlukTarih != gunAnahtari(simdi) ? 1 : 0;
+}
+
+/// Bir ücretsiz deneme bitince yeni (bitmis, gunlukTarih) değerleri.
+/// Son başlangıç hakkının kullanıldığı gün, o günün günlük hakkı da kullanılmış sayılır.
+(int, String?) ucretsizHakDus({required int bitmis, required String? gunlukTarih, required DateTime simdi}) {
+  final bugun = gunAnahtari(simdi);
+  if (bitmis < ucretsizSinav) {
+    final b = bitmis + 1;
+    return (b, b >= ucretsizSinav ? bugun : gunlukTarih);
+  }
+  return (bitmis, bugun);
 }

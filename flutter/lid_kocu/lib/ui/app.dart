@@ -1,4 +1,6 @@
-// Uygulama kabuğu: MaterialApp, dil/tema, üst bilgi, sekmeler, alt bilgi.
+// Uygulama kabuğu: MaterialApp, dil/tema, ilk açılış, üst bilgi, sekmeler, alt bilgi.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -7,6 +9,7 @@ import 'alt_bilgi.dart';
 import 'ana_sayfa.dart';
 import 'calis.dart';
 import 'durum.dart';
+import 'ilk_acilis.dart';
 import 'sinav.dart';
 import 'tema.dart';
 
@@ -53,37 +56,86 @@ class _KabukDurumu extends State<Kabuk> {
   int _sekme = 0;
   bool _limit = false;
   final ScrollController _kaydirma = ScrollController();
+  late final AppLifecycleListener _yasam;
+  Timer? _sure;
+
+  @override
+  void initState() {
+    super.initState();
+    _yasam = AppLifecycleListener(
+      onResume: () => DurumKapsami.oku(context).onPlanaDondu(),
+      onHide: () => DurumKapsami.oku(context).sesDurdur(),
+    );
+    // Sınav süresi hangi sekmede olunursa olsun dolunca sınav biter.
+    _sure = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) DurumKapsami.oku(context).sureKontrol();
+    });
+  }
 
   @override
   void dispose() {
+    _sure?.cancel();
+    _yasam.dispose();
     _kaydirma.dispose();
     super.dispose();
   }
 
+  void _ustTarafa() {
+    if (_kaydirma.hasClients) _kaydirma.jumpTo(0);
+  }
+
   void _sekmeSec(int i) {
+    DurumKapsami.oku(context).sesDurdur();
     setState(() {
       _sekme = i;
       _limit = false;
     });
-    if (_kaydirma.hasClients) _kaydirma.jumpTo(0);
+    _ustTarafa();
   }
 
+  /// Devam eden sınav varsa ona döner; yoksa (hak varsa) yeni sınav açar.
   void _sinavBasla() {
     final ok = DurumKapsami.oku(context).sinavBaslat();
     setState(() {
       _limit = !ok;
       _sekme = 2;
     });
-    if (_kaydirma.hasClients) _kaydirma.jumpTo(0);
+    _ustTarafa();
+  }
+
+  void _yanlisCalis() {
+    DurumKapsami.oku(context).sonSinavYanlisCalis();
+    setState(() {
+      _sekme = 1;
+      _limit = false;
+    });
+    _ustTarafa();
   }
 
   @override
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
+    if (!s.kurulumTamam) {
+      return Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 620),
+                child: const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 40),
+                  child: IlkAcilis(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final Widget govde = switch (_sekme) {
       0 => AnaSayfa(onSinavBasla: _sinavBasla),
       1 => const CalisSayfasi(),
-      _ => SinavSayfasi(limit: _limit, onBasla: _sinavBasla),
+      _ => SinavSayfasi(limit: _limit, onBasla: _sinavBasla, onYanlisCalis: _yanlisCalis),
     };
     return Scaffold(
       body: SafeArea(
@@ -119,7 +171,6 @@ class _KabukDurumu extends State<Kabuk> {
 class _Ust extends StatelessWidget {
   const _Ust();
 
-  static const _adlar = {'tr': 'Türkçe', 'en': 'English', 'de': 'Deutsch', 'ar': 'العربية'};
   static const _kisa = {'tr': 'TR', 'en': 'EN', 'de': 'DE', 'ar': 'عر'};
 
   @override
@@ -163,8 +214,9 @@ class _Ust extends StatelessWidget {
               Semantics(
                 button: true,
                 selected: s.dil == d,
-                label: _adlar[d],
+                label: dilAdlari[d],
                 excludeSemantics: true,
+                onTap: () => s.dilSec(d),
                 child: InkWell(
                   key: ValueKey('dil-$d'),
                   borderRadius: BorderRadius.circular(8),
@@ -225,6 +277,7 @@ class _Sekmeler extends StatelessWidget {
                 selected: i == secili,
                 excludeSemantics: true,
                 label: state.t(_anahtarlar[i]),
+                onTap: () => secildi(i),
                 child: InkWell(
                   key: ValueKey(_kimlik[i]),
                   onTap: () => secildi(i),
