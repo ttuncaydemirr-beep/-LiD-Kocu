@@ -118,12 +118,12 @@
     "She/He runs the day-to-day business of government.",
     "She/He supervises the governing party.",
     "She/He selects the ministers.",
-    "She/He proposes the Chancellor for election."
+    "She/He proposes the Federal Chancellor for election."
    ],
    "g": [
     "A photo from 1974 shows the following situation: the then German Federal President Gustav Heinemann hands Helmut Schmidt the certificate of appointment as German Federal Chancellor."
    ],
-   "x": "The Federal President proposes the Chancellor to the Bundestag for election. The government is run by the Chancellor, who also chooses the ministers."
+   "x": "The Federal President proposes the Federal Chancellor to the Bundestag for election. The government is run by the Federal Chancellor, who also chooses the ministers."
   },
   "tr": {
    "q": "1974'te dönemin Alman Federal Cumhurbaşkanı Gustav Heinemann, Helmut Schmidt'e Alman Federal Başbakanı olarak atanma belgesini veriyor. Alman Federal Cumhurbaşkanı'nın görevleri arasında hangisi vardır?",
@@ -286,7 +286,7 @@
    "x": "Brandt, Varşova Gettosu anıtında Nazilerin Polonya'ya ve Yahudilere işlediği suçlar için af diledi. Bu bir boyun eğme ya da dua değildi."
   },
   "ar": {
-   "q": "ماذا أراد ويلي برانت أن يعبّر عنه بركوعه عام 1970 في الحي اليهودي السابق في وارسو؟",
+   "q": "ماذا أراد ويلي برانت أن يعبّر عنه بجثوّه على ركبتيه عام 1970 في الحي اليهودي السابق في وارسو؟",
    "o": [
     "خضع للحلفاء السابقين.",
     "طلب الصفح من بولندا ومن اليهود البولنديين.",
@@ -296,7 +296,7 @@
    "g": [
     "الصورة فوتوغرافية يظهر فيها المستشار الاتحادي آنذاك ويلي برانت وهو يركع على ساحة عام 1970. تبدو عليه علامات التأثر. يداه مضمومتان أمام جسده. ويظهر في الخلفية أناس كثيرون."
    ],
-   "x": "ركع برانت عند نصب حي وارسو اليهودي ليطلب الصفح عن جرائم النازيين بحق بولندا واليهود. لم يكن ذلك خضوعًا ولا صلاة."
+   "x": "جثا برانت على ركبتيه عند نصب حي وارسو اليهودي ليطلب الصفح عن جرائم النازيين بحق بولندا واليهود. لم يكن ذلك خضوعًا ولا صلاة."
   },
   "de": {
    "g": [
@@ -324,10 +324,10 @@
   "tr": {
    "q": "Hangi Alman devletinin bayrağı siyah-kırmızı-altın renkliydi ve üzerinde çekiç, pergel ve başak çelengi vardı?",
    "o": [
-    "Prusya",
-    "Almanya Federal Cumhuriyeti",
-    "\"Üçüncü Reich\"",
-    "DDR (Doğu Almanya)"
+    "Prusya (Preußen)",
+    "Almanya Federal Cumhuriyeti (Bundesrepublik Deutschland)",
+    "\"Üçüncü Reich\" (Drittes Reich)",
+    "Doğu Almanya (DDR)"
    ],
    "g": [
     "Resimde siyah-kırmızı-altın renkli bir bayrak görülüyor. Ortada, içinde kırmızı zemin üzerinde altın renkli bir çekiç ile pergelin bulunduğu altın bir başak çelengi vardır. Çelengin alt kısmına siyah-kırmızı-altın bir kurdele dolanmıştır."
@@ -429,7 +429,7 @@
    "g": [
     "Shown is a photo of the plenary chamber of the German Bundestag. Blue seats are arranged in a semicircle. On a higher level, rows of black benches are likewise arranged in a semicircle. In front of the blue seats, at the centre of the semicircle, is the speaker's lectern, along with further blue seats. At the front of the semicircle the room is decorated by a glass facade, four tall columns, a large version of a coat of arms with an eagle, and two flags: on the left a black-red-gold flag, on the right a blue flag with stars. On the left and right sides of the room are large windows. Many people are in the plenary chamber: members of parliament, visitors, photographers."
    ],
-   "x": "A large black eagle, the Federal Eagle, hangs on the chamber's front wall. The Imperial Eagle and Crown belong to the old Empire."
+   "x": "A large black eagle, the Federal Eagle, hangs on the front wall. The Imperial Eagle (used until 1945) and Crown stand for earlier German states, not the Federal Republic."
   },
   "tr": {
    "q": "Alman Federal Meclisi'nin genel kurul salonunda hangi simge görülür?",
@@ -442,7 +442,7 @@
    "g": [
     "Resimde Alman Federal Meclisi'nin genel kurul salonunun bir fotoğrafı görülüyor. Mavi koltuklar yarım daire biçiminde sıralanmıştır. Daha yüksek bir seviyede, siyah sıralar da yarım daire biçiminde dizilmiştir. Mavi koltukların önünde, yarım dairenin merkezinde konuşma kürsüsü ve ayrıca başka mavi koltuklar vardır. Yarım dairenin ön tarafında salon; bir cam cephe, dört yüksek sütun, iri bir kartal arması ve iki bayrakla süslenmiştir: solda siyah-kırmızı-altın bir bayrak, sağda yıldızlı mavi bir bayrak. Salonun sol ve sağ yanlarında büyük pencereler bulunur. Genel kurul salonunda çok sayıda kişi vardır: milletvekilleri, ziyaretçiler, fotoğrafçılar."
    ],
-   "x": "Genel kurul salonunun ön duvarında büyük siyah bir kartal, yani Federal Kartal asılıdır. İmparatorluk Kartalı ve tacı eski İmparatorluğa aittir."
+   "x": "Genel kurul salonunun ön duvarında büyük siyah bir kartal, yani Federal Kartal asılıdır. İmparatorluk Kartalı (1945'e kadar kullanıldı) ve İmparatorluk Tacı önceki Alman devletlerini simgeler, Federal Cumhuriyet'i değil."
   },
   "ar": {
    "q": "أيّ رمز يمكن رؤيته في قاعة الجلسات العامة للبوندستاغ الألماني؟",
@@ -455,13 +455,13 @@
    "g": [
     "تظهر في الصورة قاعة الجلسات العامة للبوندستاغ الألماني. المقاعد الزرقاء مرتبة على شكل نصف دائرة. وعلى مستوى أعلى صفوف من المقاعد السوداء مرتبة هي الأخرى على شكل نصف دائرة. أمام المقاعد الزرقاء، في مركز نصف الدائرة، منصة الخطابة، إضافة إلى مقاعد زرقاء أخرى. وفي واجهة نصف الدائرة تزيّن القاعة واجهة زجاجية وأربعة أعمدة عالية وشعار كبير على شكل نسر وعلمان: على اليسار علم أسود وأحمر وذهبي، وعلى اليمين علم أزرق عليه نجوم. وعلى جانبي القاعة الأيسر والأيمن نوافذ كبيرة. وفي القاعة أناس كثيرون: نواب وزوار ومصورون."
    ],
-   "x": "يعلو الجدار الأمامي للقاعة نسر أسود كبير هو نسر الاتحاد. أما نسر الرايخ وتاجه فيعودان إلى الإمبراطورية القديمة."
+   "x": "يعلو الجدار الأمامي للقاعة نسر أسود كبير هو نسر الاتحاد. أما نسر الرايخ (الذي استُخدم حتى 1945) وتاج الرايخ فهما من رموز دول ألمانية سابقة، لا من رموز الجمهورية الاتحادية."
   },
   "de": {
    "g": [
     "Abgebildet ist ein Foto des Plenarsaals des Deutschen Bundestages. Im Halbkreis sind blaue Sitze angeordnet. Auf einer höheren Ebene sind ebenfalls im Halbkreis schwarze Bankreihen angeordnet. Vor den blauen Sitzen ist im Zentrum des Halb-kreises das Rednerpult zu sehen, zudem weitere blaue Sitze. An der Frontseite des Halbkreises wird der Raum verziert durch eine Glasfassade, vier hohe Säulen, das Wappen eines Adlers in großer Ausführung sowie zwei Flaggen: links eine schwarz-rot-goldene Flagge, rechts eine blaue Flagge mit Sternen. An der linken und rechten Seite des Raumes sind große Fenster. Im Plenarsaal befinden sich viele Menschen: Abgeordnete, Besucher, Fotografen."
    ],
-   "x": "An der Stirnwand des Plenarsaals hängt der große schwarze Bundesadler. Reichsadler und Reichskrone gehören zum alten Kaiserreich."
+   "x": "An der Stirnwand des Plenarsaals hängt der große schwarze Bundesadler. Reichsadler (bis 1945) und Reichskrone stehen für frühere Reiche, nicht für die Bundesrepublik."
   }
  },
  "226": {
