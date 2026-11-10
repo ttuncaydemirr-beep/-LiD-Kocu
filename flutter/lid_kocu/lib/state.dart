@@ -78,6 +78,13 @@ class AppState extends ChangeNotifier {
   int karisikTohum;
   final Map<String, String> _calisKonum;
 
+  /// Premium olmadan yanlış açıklaması ücretsiz açılan soruların kimlikleri (kalıcı, sıradan bağımsız).
+  /// Bir kez açılan soru açık kalır; liste sırası, karışık sıra veya sekme değişimi bunu değiştirmez.
+  final Set<String> _ucretsizAcilan = {};
+
+  /// Çalış > Yanlışlarım listesinin ilk ziyareti yapıldı mı (ilk 3 soru o ziyarette sabitlenir).
+  bool _yanlisZiyaret = false;
+
   bool _atildi = false;
 
   AppState._(this.katalog, this.ceviriler, this.metin, this._p, this.billing, this._tts, this._soruIndeksi,
@@ -147,6 +154,8 @@ class AppState extends ChangeNotifier {
         calisKonum: konum);
     final f = p?.getString('calisFiltre');
     if (f == filtreYanlis) st.calisFiltre = filtreYanlis;
+    st._ucretsizAcilan.addAll(p?.getStringList('ucretsizAcilan') ?? const <String>[]);
+    st._yanlisZiyaret = p?.getBool('yanlisZiyaret') ?? false;
     st._sinav = oku<Sinav?>('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
     st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
     // Play bağlantısı ilk ekranı bekletmez.
@@ -175,10 +184,24 @@ class AppState extends ChangeNotifier {
   // ---- premium
   bool get premium => billing.sahip;
 
-  /// Premium olmadan açık açıklama: örnek sorular, günün sorusu veya [ucretsiz] (yanlış listesinin ilk 3'ü).
+  /// Premium olmadan açık açıklama: örnek sorular, günün sorusu, [ucretsiz] veya yanlış listesinde
+  /// ücretsiz açılmış (kimliği kalıcı kümede olan) soru.
   bool ucretsizAciklama(Soru s, {bool ucretsiz = false}) =>
-      ucretsiz || ornekAciklama(s.id) || s.id == gununSorusu.id;
+      ucretsiz || ornekAciklama(s.id) || s.id == gununSorusu.id || _ucretsizAcilan.contains(s.id);
   bool aciklamaAcik(Soru s, {bool ucretsiz = false}) => premium || ucretsizAciklama(s, ucretsiz: ucretsiz);
+
+  /// Yanlış listelerinde bu sorunun açıklaması (ve sorusu) Premium olmadan açık mı. Karar kimliğe bağlıdır.
+  bool yanlisUcretsiz(Soru s) => _ucretsizAcilan.contains(s.id);
+
+  /// [liste]nin ilk [ucretsizYanlis] sorusunu kalıcı kümeye ekler (Premium'da hiçbir şey yapmaz).
+  void _yanlisUcretsizAc(Iterable<Soru> liste) {
+    if (premium) return;
+    var degisti = false;
+    for (final q in liste.take(ucretsizYanlis)) {
+      if (_ucretsizAcilan.add(q.id)) degisti = true;
+    }
+    if (degisti) _p?.setStringList('ucretsizAcilan', _ucretsizAcilan.toList());
+  }
 
   bool get sinavAcik =>
       premium || ucretsizSinavVar(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
@@ -258,6 +281,12 @@ class AppState extends ChangeNotifier {
       _ => havuz,
     };
     if (karisik && filtre != filtreSinav) l.shuffle(Random(karisikTohum));
+    if (filtre == filtreYanlis && !_yanlisZiyaret && !premium && l.isNotEmpty) {
+      // İlk ziyaret: listedeki ilk 3 soru kimlikle sabitlenir; sonra sıra değişse de başka soru açılmaz.
+      _yanlisUcretsizAc(l);
+      _yanlisZiyaret = true;
+      _p?.setBool('yanlisZiyaret', true);
+    }
     return l;
   }
 
@@ -324,7 +353,7 @@ class AppState extends ChangeNotifier {
   bool _sureKontrol({required bool bildir}) {
     final x = _sinav;
     if (x == null || x.bitti || !x.suresiDoldu(simdi())) return false;
-    _bitir(x);
+    _bitir(x, sureDoldu: true);
     if (bildir) _bildir();
     return true;
   }
@@ -378,7 +407,9 @@ class AppState extends ChangeNotifier {
     _bildir();
   }
 
-  void _bitir(Sinav x) {
+  void _bitir(Sinav x, {bool sureDoldu = false}) {
+    // Hiç cevap verilmeden süresi dolan sınav: hak düşer ama geçmişe ve açıklama hakkına yazılmaz.
+    final bosSure = sureDoldu && x.cevaplar.every((c) => c == null);
     x.bitti = true;
     x.sira = 0;
     for (var i = 0; i < x.sorular.length; i++) {
@@ -387,16 +418,21 @@ class AppState extends ChangeNotifier {
     }
     _kaydet();
     if (!premium) {
-      final (b, g) = ucretsizHakDus(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
+      // Hak, sınavın BAŞLADIĞI güne yazılır (terk edilip sonra süresi dolan sınav bugünün hakkını yemez).
+      final baslangic = x.bitis.subtract(sinavSuresi);
+      final (b, g) = ucretsizHakDus(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: baslangic);
       sinavSayisi = b;
       gunlukTarih = g;
       _p?.setInt('sinavSayisi', b);
       if (g != null) _p?.setString('gunlukTarih', g);
     }
-    final tarih = simdi().isAfter(x.bitis) ? x.bitis : simdi();
-    gecmis.add(SinavKaydi(tarih, x.puan));
-    if (gecmis.length > 50) gecmis.removeRange(0, gecmis.length - 50);
-    _p?.setString('gecmis', jsonEncode([for (final k in gecmis) k.toJson()]));
+    if (!bosSure) {
+      _yanlisUcretsizAc(x.yanlislar); // bu sınavın ilk 3 yanlışı (sınavdaki sırayla) ücretsiz
+      final tarih = simdi().isAfter(x.bitis) ? x.bitis : simdi();
+      gecmis.add(SinavKaydi(tarih, x.puan));
+      if (gecmis.length > 50) gecmis.removeRange(0, gecmis.length - 50);
+      _p?.setString('gecmis', jsonEncode([for (final k in gecmis) k.toJson()]));
+    }
     _p?.remove('sinavDevam');
     unawaited(sesDurdur());
   }

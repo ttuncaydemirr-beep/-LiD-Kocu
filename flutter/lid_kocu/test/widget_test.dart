@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lid_kocu/core/veri.dart';
 import 'package:lid_kocu/state.dart';
 import 'package:lid_kocu/ui/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -223,13 +224,37 @@ void main() {
     expect(s2!.calisBaslangic(filtreTumu, s2.calismaListesi(filtreTumu)), 1);
   });
 
-  testWidgets('yanlislarim: sayi gorunur, ilk 3 ucretsiz, sonra kilit', (t) async {
+  testWidgets('yanlislarim: ilk 3 soru kimlikle ucretsiz, karisik sira baska soru acmaz, sonra kilit', (t) async {
     _genisYuzey(t);
     final s = await _kur(t);
-    // 5 soruyu yanlış işaretle.
-    for (final q in s.havuz.take(5)) {
+    // Ücretsiz örnek (kimlik <= 20) ve günün sorusu olmayan 5 soruyu yanlış işaretle.
+    final yanlis = s.havuz.where((q) => !ornekAciklama(q.id) && q.id != s.gununSorusu.id).take(5).toList();
+    expect(yanlis.length, 5);
+    for (final q in yanlis) {
       s.cevapla(q, (q.dogru + 1) % 4);
     }
+    expect([for (final q in yanlis) s.aciklamaAcik(q)], everyElement(isFalse));
+
+    // İlk ziyaret: listedeki ilk 3 soru kümeye girer.
+    final ilk = s.calismaListesi(filtreYanlis);
+    expect(ilk.length, 5);
+    final acik = [for (final q in ilk.take(3)) q.id];
+    List<String> acikOlanlar() => [for (final q in yanlis) if (s.yanlisUcretsiz(q)) q.id]..sort();
+    expect(acikOlanlar(), [...acik]..sort());
+
+    // Karışık sırayı defalarca aç/kapa: başka soru açılmaz.
+    for (var i = 0; i < 8; i++) {
+      s.karisikSec(true);
+      s.calismaListesi(filtreYanlis);
+      expect(acikOlanlar(), [...acik]..sort());
+      s.karisikSec(false);
+      s.calismaListesi(filtreYanlis);
+      expect(acikOlanlar(), [...acik]..sort());
+    }
+    for (final q in yanlis) {
+      expect(s.aciklamaAcik(q), acik.contains(q.id));
+    }
+
     await t.pumpWidget(LidKocuApp(state: s));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const ValueKey('sekme-calis')));
@@ -241,11 +266,19 @@ void main() {
       expect(find.byKey(const ValueKey('yanlis-kilit')), findsNothing);
       await t.tap(find.byKey(const ValueKey('secenek-0')));
       await t.pumpAndSettle();
+      // Kimliği açılmış sorunun açıklaması kilitli değil.
+      expect(find.byKey(const ValueKey('premium-ac')), findsNothing);
       await t.tap(find.byKey(const ValueKey('sonraki-soru')));
       await t.pumpAndSettle();
     }
     expect(find.byKey(const ValueKey('yanlis-kilit')), findsOneWidget);
     expect(find.text(s.t('lockedRest', {'n': 2})), findsOneWidget);
+
+    // Kalıcı: yeniden açılışta aynı kimlikler açık.
+    final s2 = await t.runAsync(() => AppState.olustur(sesli: false));
+    for (final q in yanlis) {
+      expect(s2!.yanlisUcretsiz(q), acik.contains(q.id));
+    }
   });
 
   testWidgets('dinle dugmesi ucretsiz kullaniciya kilitli gorunur', (t) async {

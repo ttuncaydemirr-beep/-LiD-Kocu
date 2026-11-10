@@ -15,9 +15,12 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.5.0
-  in_app_purchase: ^3.3.1
+  # Tam sürüm sabitlendi (^ yok): billing.dart, completePurchase'ın Android'de BillingResultWrapper Future'ı
+  # döndürmesine dayanır (_tekOnay) ve pubspec.lock depoda yok. Yeni sürüm bu davranışı sessizce
+  # değiştirebilir; güncellerken billing.dart elle yeniden doğrulanmalı.
+  in_app_purchase: 3.3.1
   # 0.5.x = Play Billing Library 8+ (0.5.5: BL 9.1). Play, BL7 içeren yüklemeleri kabul etmiyor.
-  in_app_purchase_android: ^0.5.5
+  in_app_purchase_android: 0.5.5
   url_launcher: ^6.3.0
   flutter_tts: ^4.2.0
 

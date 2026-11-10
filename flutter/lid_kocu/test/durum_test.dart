@@ -132,6 +132,38 @@ void main() {
     });
   });
 
+  group('terk edilen sinav', () {
+    test('suresi sonradan dolan sinavin hakki basladigi gune yazilir; bos sinav gecmise girmez', () async {
+      // Başlangıç hakları bitmiş: günlük hak devrede.
+      final s = await _yeni(const {'kurulum': true, 'sinavSayisi': 2});
+      s.saat = () => gun1;
+      expect(s.sinavBaslat(), isTrue);
+      final gun4 = gun1.add(const Duration(days: 3));
+      s.saat = () => gun4;
+      expect(s.sinav!.bitti, isTrue); // erişimde biter
+      expect(s.gunlukTarih, gunAnahtari(gun1));
+      expect(s.gecmis, isEmpty);
+      expect(s.son3Ortalama, isNull);
+      // Bugünün (4. gün) hakkı düşmedi.
+      expect(s.sinavAcik, isTrue);
+      expect(s.ucretsizKalanSinav, 1);
+      // Başladığı günün hakkı düştü.
+      s.saat = () => gun1.add(const Duration(hours: 1));
+      expect(s.sinavAcik, isFalse);
+    });
+
+    test('cevap verilmis terk edilen sinav gecmise girer, hak yine baslangic gunune yazilir', () async {
+      final s = await _yeni(const {'kurulum': true, 'sinavSayisi': 2});
+      s.saat = () => gun1;
+      s.sinavBaslat();
+      s.sinavCevap(0);
+      s.saat = () => gun1.add(const Duration(days: 3));
+      expect(s.sinav!.bitti, isTrue);
+      expect(s.gunlukTarih, gunAnahtari(gun1));
+      expect(s.gecmis.length, 1);
+    });
+  });
+
   group('calisma', () {
     test('konum suzgec basina kaydedilir ve geri gelir', () async {
       final s = await _yeni();

@@ -152,10 +152,12 @@ class Billing {
       await geriYukle();
       return _durumdanSonuc(SatinAlmaSonucu.hata);
     }
-    return c.future.timeout(const Duration(minutes: 3), onTimeout: () async {
+    // Zaman aşımı sessizdir (iptal gibi, arayüz mesaj göstermez). Ödeme sonradan tamamlanırsa
+    // PURCHASED purchaseStream'den gelir; Premium verilir ve onaylanır.
+    return c.future.timeout(const Duration(minutes: 10), onTimeout: () async {
       if (identical(_alim, c)) _alim = null;
       await geriYukle();
-      return _durumdanSonuc(SatinAlmaSonucu.hata);
+      return _durumdanSonuc(SatinAlmaSonucu.iptal);
     });
   }
 
@@ -259,8 +261,9 @@ class Billing {
     if (!o.geriYukleme) return;
     final rc = _geri;
     _geri = null;
+    final ag = (o.alindi || o.bekliyor) ? false : (await _urunAl()) != null;
+    // Eski mi kontrolü bekledikten SONRA: bekleme sırasında satın alma olduysa Premium kapanmasın.
     final eski = _geriSira != _alimSira;
-    final ag = (o.alindi || o.bekliyor || eski) ? false : (await _urunAl()) != null;
     final karar = geriYuklemeKarari(o, agDogrulandi: ag, eskiIstek: eski);
     if (karar != null) _sahipYap(karar);
     if (rc != null && !rc.isCompleted) rc.complete(karar ?? (o.bekliyor ? false : null));

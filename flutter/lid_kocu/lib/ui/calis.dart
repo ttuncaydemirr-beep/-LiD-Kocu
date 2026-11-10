@@ -38,6 +38,22 @@ class _CalisDurumu extends State<CalisSayfasi> {
     ustuneKaydir(context);
   }
 
+  /// Listedeki ilk ücretsiz (açık) sorunun sırası; yoksa 0.
+  int _ilkAcik(AppState s, List<Soru> l) {
+    final k = l.indexWhere(s.yanlisUcretsiz);
+    return k < 0 ? 0 : k;
+  }
+
+  /// Sonraki soru. Premium'suz yanlış listelerinde kilitli soruları atlar: ileride açık soru varsa ona,
+  /// yoksa (ve ardında kilitli soru varsa) bir kez kilit kartına, değilse baştaki açık soruya gider.
+  int _sonraki(AppState s, bool yanlisListesi, List<Soru> l, int i) {
+    if (!yanlisListesi || s.premium) return (i + 1) % l.length;
+    for (var k = i + 1; k < l.length; k++) {
+      if (s.yanlisUcretsiz(l[k])) return k;
+    }
+    return i + 1 < l.length ? i + 1 : _ilkAcik(s, l);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
@@ -96,8 +112,12 @@ class _CalisDurumu extends State<CalisSayfasi> {
     } else {
       final i = _idx % l.length;
       final soru = l[i];
-      if (yanlisListesi && !s.premium && i >= ucretsizYanlis) {
-        icerik = _KilitKarti(kalan: l.length - ucretsizYanlis, onBastan: () => _git(s, f, l, 0));
+      if (yanlisListesi && !s.premium && !s.yanlisUcretsiz(soru)) {
+        // Kilit kimliğe bağlıdır (listedeki konuma değil): sıra değişse de açılan sorular sabit kalır.
+        icerik = _KilitKarti(
+          kalan: l.where((q) => !s.yanlisUcretsiz(q)).length,
+          onBastan: () => _git(s, f, l, _ilkAcik(s, l)),
+        );
       } else {
         icerik = Kart(
           child: Column(
@@ -119,7 +139,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
               if (_secim != null)
                 FilledButton(
                   key: const ValueKey('sonraki-soru'),
-                  onPressed: () => _git(s, f, l, (i + 1) % l.length),
+                  onPressed: () => _git(s, f, l, _sonraki(s, yanlisListesi, l, i)),
                   child: Text(s.t('next')),
                 ),
             ],
