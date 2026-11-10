@@ -18,8 +18,10 @@ Resmî değildir; BAMF veya başka bir devlet kurumunu temsil etmez. Destek: nil
 - Cevabı zamanla değişen sorular: 72, 73, 75, 236 (`lib/core/veri.dart` > `guncelSorular`).
 
 ## Satış modeli
-Reklam yok. Sorular ve çevirileri ücretsiz. Tek seferlik **Premium** (ürün kimliği `premium`): tüm açıklamalar, sınırsız deneme sınavı
-(ücretsiz: 2), yanlışları tekrar çalışma, sesli dinleme. Fiyat Play Console'da belirlenir; uygulama Play'in fiyatını gösterir.
+Reklam yok. Sorular ve çevirileri ücretsiz. Ücretsiz: 2 deneme sınavı + her gün 1 (hak sınav bitince düşer), ilk 20 sorunun
+ve günün sorusunun açıklaması, her sınavın ilk 3 yanlışının açıklaması. Tek seferlik **Premium** (ürün kimliği `premium`):
+tüm açıklamalar, sınırsız deneme, yanlışların tamamı, Almanca sesli dinleme. Fiyat Play Console'da belirlenir.
+Mağaza metinleri (4 dil): `docs/magaza-kaydi.md`. Gizlilik: `docs/gizlilik.html` (GitHub Pages).
 
 ## Derleme (GitHub Actions)
 `main` dalına her gönderimde **Derle** iş akışı çalışır:
