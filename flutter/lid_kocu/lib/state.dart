@@ -47,7 +47,9 @@ class AppState extends ChangeNotifier {
   final SharedPreferences? _p;
   final Billing billing;
   final FlutterTts? _tts;
+  /// Kimliğe göre soru (kayıtlı sınav ve yanlış listeleri için).
   final Map<String, Soru> _soruIndeksi;
+  Soru? soruBul(String id) => _soruIndeksi[id];
 
   /// Saat kaynağı. Testlerde değiştirilir (gün değişimi, süre dolması).
   @visibleForTesting
@@ -145,7 +147,7 @@ class AppState extends ChangeNotifier {
         calisKonum: konum);
     final f = p?.getString('calisFiltre');
     if (f == filtreYanlis) st.calisFiltre = filtreYanlis;
-    st._sinav = oku('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
+    st._sinav = oku<Sinav?>('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
     st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
     // Play bağlantısı ilk ekranı bekletmez.
     if (sesli) unawaited(b.baslat());
