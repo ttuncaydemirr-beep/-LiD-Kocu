@@ -153,7 +153,7 @@ class _Secenek extends StatelessWidget {
       _Durum.dogru => (r.dogru, r.dogruZemin, 1.5),
       _Durum.yanlis => (r.yanlis, r.yanlisZemin, 1.5),
       _Durum.secili => (r.vurgu, Colors.transparent, 2.5),
-      _Durum.yok => (r.cizgi, Colors.transparent, 1.5),
+      _Durum.yok => (r.secenekKenar, Colors.transparent, 1.5),
     };
 
     return Semantics(
