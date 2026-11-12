@@ -127,6 +127,63 @@ void main() {
     });
   });
 
+  group('analytics rizasi (Consent Mode v2)', () {
+    const ret = AnalyticsRizasi.hepsiRed;
+    const onay = AnalyticsRizasi.hepsiOnay;
+
+    test('riza gerekmiyorsa hepsi granted', () {
+      expect(analyticsRizasi(durum: RizaDurumu.gerekmiyor, tcfAmaclar: null, premium: false), onay);
+    });
+
+    test('riza gerekli/bilinmiyor ise hepsi denied', () {
+      for (final p in [false, true]) {
+        expect(analyticsRizasi(durum: RizaDurumu.gerekli, tcfAmaclar: '1111111111', premium: p), ret);
+        expect(analyticsRizasi(durum: RizaDurumu.bilinmiyor, tcfAmaclar: '1111111111', premium: p), ret);
+      }
+    });
+
+    test('riza alindi: TCF amaclari 1, 3+4, 7', () {
+      expect(analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '1111111111', premium: false), onay);
+      expect(analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '0000000000', premium: false), ret);
+      expect(analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: null, premium: false), ret);
+      expect(analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '', premium: false), ret);
+      expect(
+        analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '1000000000', premium: false),
+        const AnalyticsRizasi(analyticsStorage: true, adStorage: true),
+      );
+      // 3 var, 4 yok: ad_personalization denied; 7 var: ad_user_data granted.
+      expect(
+        analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '0010001000', premium: false),
+        const AnalyticsRizasi(adUserData: true),
+      );
+      expect(
+        analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '0011000', premium: false),
+        const AnalyticsRizasi(adPersonalization: true),
+      );
+      // Kısa dizi: eksik amaç denied.
+      expect(
+        analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '1111', premium: false),
+        const AnalyticsRizasi(analyticsStorage: true, adStorage: true, adPersonalization: true),
+      );
+    });
+
+    test('premium: AEA disinda yalniz analytics_storage, daha once riza alindiysa TCF', () {
+      expect(
+        analyticsRizasi(durum: RizaDurumu.gerekmiyor, tcfAmaclar: null, premium: true),
+        const AnalyticsRizasi(analyticsStorage: true),
+      );
+      expect(analyticsRizasi(durum: RizaDurumu.alindi, tcfAmaclar: '1111111111', premium: true), onay);
+    });
+
+    test('tcf amac okuma', () {
+      expect(tcfAmacOnayli('101', 1), isTrue);
+      expect(tcfAmacOnayli('101', 2), isFalse);
+      expect(tcfAmacOnayli('101', 4), isFalse);
+      expect(tcfAmacOnayli('101', 0), isFalse);
+      expect(tcfAmacOnayli(null, 1), isFalse);
+    });
+  });
+
   group('reklam birimi kimligi', () {
     test('test derlemesinde test kimligi', () {
       expect(birimSec(test: true, uygulama: '', testBirim: 'T', gercekBirim: ''), 'T');

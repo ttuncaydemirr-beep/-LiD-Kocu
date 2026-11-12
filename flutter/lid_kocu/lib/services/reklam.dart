@@ -8,6 +8,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_android/shared_preferences_android.dart';
 
 import 'olcum.dart';
 import 'reklam_ayar.dart';
@@ -111,9 +113,68 @@ class Reklam {
     if (!_kapali) degisti?.call();
   }
 
-  /// Açılışta beklenmeden çağrılır. Premium'da hiçbir şey yapmaz (UMP formu da gösterilmez).
+  /// UMP'nin yazdığı TCF amaç dizisi (Android varsayılan SharedPreferences, ön ek yok).
+  static Future<String?> _tcfAmaclar() async {
+    try {
+      const secenek = SharedPreferencesAsyncAndroidOptions(
+        backend: SharedPreferencesAndroidBackendLibrary.SharedPreferences,
+        originalSharedPreferencesOptions: AndroidSharedPreferencesStoreOptions(),
+      );
+      return await SharedPreferencesAsync(options: secenek).getString('IABTCF_PurposeConsents');
+    } catch (e) {
+      if (kDebugMode) debugPrint('IABTCF: $e');
+      return null;
+    }
+  }
+
+  static RizaDurumu _durum(ConsentStatus s) => switch (s) {
+        ConsentStatus.notRequired => RizaDurumu.gerekmiyor,
+        ConsentStatus.obtained => RizaDurumu.alindi,
+        ConsentStatus.required => RizaDurumu.gerekli,
+        ConsentStatus.unknown => RizaDurumu.bilinmiyor,
+      };
+
+  /// UMP durumunu okuyup Analytics rızasını (Consent Mode v2) uygular.
+  Future<void> _analyticsRizasi() async {
+    var durum = RizaDurumu.bilinmiyor;
+    try {
+      durum = _durum(await ConsentInformation.instance.getConsentStatus());
+    } catch (e) {
+      if (kDebugMode) debugPrint('UMP durum: $e');
+    }
+    final tcf = durum == RizaDurumu.alindi ? await _tcfAmaclar() : null;
+    olcum.rizaUygula(analyticsRizasi(durum: durum, tcfAmaclar: tcf, premium: premium()));
+  }
+
+  /// Premium: form gösterilmez, reklam SDK'sı başlamaz. Yalnızca rıza bilgisi güncellenip bölge/durum okunur
+  /// (AEA dışı ise analytics_storage granted; bilinmiyorsa veya rıza gerekli ve alınmamışsa denied kalır).
+  Future<void> _premiumRiza() async {
+    try {
+      final bitti = Completer<void>();
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        ConsentRequestParameters(),
+        () {
+          if (!bitti.isCompleted) bitti.complete();
+        },
+        (FormError e) {
+          if (!bitti.isCompleted) bitti.complete();
+        },
+      );
+      await bitti.future.timeout(const Duration(seconds: 20));
+    } catch (e) {
+      if (kDebugMode) debugPrint('UMP (Premium): $e');
+    }
+    await _analyticsRizasi();
+  }
+
+  /// Açılışta beklenmeden çağrılır. Premium'da form ve reklam SDK'sı yok; yalnızca Analytics rızası okunur.
   Future<void> baslat() async {
-    if (_baslatildi || _kapali || !reklamSdkGerekli(premium: premium())) return;
+    if (_baslatildi || _kapali) return;
+    if (!reklamSdkGerekli(premium: premium())) {
+      _kapali = true; // Premium: reklam tarafı bu oturumda hiç başlamaz
+      await _premiumRiza();
+      return;
+    }
     _baslatildi = true;
     _bildir();
     try {
@@ -151,6 +212,7 @@ class Reklam {
       if (kDebugMode) debugPrint('UMP: $e');
     }
     _rizaBitti = true;
+    await _analyticsRizasi();
     _bildir();
     if (_rizaTamam && etkin) await _sdkBaslat();
   }
@@ -344,6 +406,7 @@ class Reklam {
     } catch (e) {
       if (kDebugMode) debugPrint('Gizlilik formu: $e');
     }
+    await _analyticsRizasi();
     _bildir();
     if (_rizaTamam && etkin) {
       await _sdkBaslat();

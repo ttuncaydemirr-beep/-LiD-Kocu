@@ -43,6 +43,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Consent Mode v2: Analytics varsayılan olarak rızasız (denied). UMP sonucundan sonra
+             lib/services/reklam.dart > olcum.rizaUygula ile FirebaseAnalytics.setConsent uygulanır. -->
+        <meta-data android:name="google_analytics_default_allow_analytics_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
         <!-- AdMob uygulama kimliği: app/build.gradle.kts > manifestPlaceholders (kaynak: lib/services/reklam_ayar.dart).
              Kullanıcı AdMob kimliğini verince reklam_ayar.dart'ta değiştir; boşken Google test kimliği kalır. -->
         <meta-data

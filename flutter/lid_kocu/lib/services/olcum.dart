@@ -17,6 +17,7 @@ class Olcum {
   late final FirebaseRemoteConfig _rc = FirebaseRemoteConfig.instance;
 
   bool _hazir = false;
+  AnalyticsRizasi? _riza;
   bool _uzakHazir = false;
   Future<void>? _baslama;
 
@@ -32,6 +33,7 @@ class Olcum {
     try {
       await Firebase.initializeApp().timeout(const Duration(seconds: 10));
       _hazir = true;
+      _rizaGonder(); // UMP sonucu Firebase'den önce geldiyse
       uzakGeldi?.call(); // Analytics hazır: user property yazılabilir
     } catch (e) {
       if (kDebugMode) debugPrint('Firebase kapalı (google-services.json yok mu?): $e');
@@ -72,6 +74,29 @@ class Olcum {
     }
     final v = uzakVarsayilan[anahtar];
     return v is num ? v.toDouble() : 0;
+  }
+
+  /// Consent Mode v2: UMP sonucundan sonra çağrılır (manifestte varsayılan hepsi denied).
+  void rizaUygula(AnalyticsRizasi r) {
+    _riza = r;
+    _rizaGonder();
+  }
+
+  void _rizaGonder() {
+    final r = _riza;
+    if (!_hazir || r == null) return;
+    unawaited(() async {
+      try {
+        await _fa.setConsent(
+          analyticsStorageConsentGranted: r.analyticsStorage,
+          adStorageConsentGranted: r.adStorage,
+          adUserDataConsentGranted: r.adUserData,
+          adPersonalizationSignalsConsentGranted: r.adPersonalization,
+        );
+      } catch (e) {
+        if (kDebugMode) debugPrint('Analytics setConsent: $e');
+      }
+    }());
   }
 
   /// Analytics olayı. Firebase yoksa sessizce boşa düşer.

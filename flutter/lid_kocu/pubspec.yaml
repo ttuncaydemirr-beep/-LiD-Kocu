@@ -15,6 +15,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.5.0
+  # Doğrudan kullanılır (reklam.dart): UMP'nin Android varsayılan SharedPreferences'a yazdığı IABTCF_PurposeConsents okunur.
+  shared_preferences_android: 2.5.5
   # Tam sürüm sabitlendi (^ yok): billing.dart, completePurchase'ın Android'de BillingResultWrapper Future'ı
   # döndürmesine dayanır (_tekOnay) ve pubspec.lock depoda yok. Yeni sürüm bu davranışı sessizce
   # değiştirebilir; güncellerken billing.dart elle yeniden doğrulanmalı.

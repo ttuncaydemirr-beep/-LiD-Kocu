@@ -125,3 +125,68 @@ String? birimSec({
   if (uygulama.trim().isEmpty) return null;
   return kimlikSec(test: false, testKimlik: testBirim, gercek: gercekBirim);
 }
+
+// ---- Analytics rızası (Consent Mode v2)
+// Manifestte dört ayar varsayılan olarak false (denied). UMP sonucu okunduktan sonra burada karar verilir.
+
+/// UMP ConsentStatus'un eklentiden bağımsız hâli.
+enum RizaDurumu { bilinmiyor, gerekli, gerekmiyor, alindi }
+
+class AnalyticsRizasi {
+  final bool analyticsStorage, adStorage, adUserData, adPersonalization;
+  const AnalyticsRizasi({
+    this.analyticsStorage = false,
+    this.adStorage = false,
+    this.adUserData = false,
+    this.adPersonalization = false,
+  });
+
+  static const AnalyticsRizasi hepsiRed = AnalyticsRizasi();
+  static const AnalyticsRizasi hepsiOnay =
+      AnalyticsRizasi(analyticsStorage: true, adStorage: true, adUserData: true, adPersonalization: true);
+
+  @override
+  bool operator ==(Object o) =>
+      o is AnalyticsRizasi &&
+      o.analyticsStorage == analyticsStorage &&
+      o.adStorage == adStorage &&
+      o.adUserData == adUserData &&
+      o.adPersonalization == adPersonalization;
+
+  @override
+  int get hashCode => Object.hash(analyticsStorage, adStorage, adUserData, adPersonalization);
+
+  @override
+  String toString() =>
+      'AnalyticsRizasi(analytics: $analyticsStorage, adStorage: $adStorage, adUserData: $adUserData, adPers: $adPersonalization)';
+}
+
+/// IAB TCF `IABTCF_PurposeConsents` dizisinde [no]. amaç (1'den başlar) onaylı mı ('1').
+bool tcfAmacOnayli(String? amaclar, int no) =>
+    amaclar != null && no >= 1 && amaclar.length >= no && amaclar[no - 1] == '1';
+
+/// UMP sonucuna göre Analytics rızası.
+///  - Rıza gerekmiyor (AEA dışı): hepsi granted. Premium'da yalnızca analytics_storage (reklam yok).
+///  - Rıza alındı: TCF amaçları — 1: analytics_storage + ad_storage, 3 ve 4: ad_personalization, 7: ad_user_data.
+///  - Gerekli ama alınmadı veya bilinmiyor (bölge bilinmiyor): hepsi denied.
+AnalyticsRizasi analyticsRizasi({
+  required RizaDurumu durum,
+  required String? tcfAmaclar,
+  required bool premium,
+}) {
+  switch (durum) {
+    case RizaDurumu.gerekmiyor:
+      return premium ? const AnalyticsRizasi(analyticsStorage: true) : AnalyticsRizasi.hepsiOnay;
+    case RizaDurumu.alindi:
+      final a1 = tcfAmacOnayli(tcfAmaclar, 1);
+      return AnalyticsRizasi(
+        analyticsStorage: a1,
+        adStorage: a1,
+        adPersonalization: tcfAmacOnayli(tcfAmaclar, 3) && tcfAmacOnayli(tcfAmaclar, 4),
+        adUserData: tcfAmacOnayli(tcfAmaclar, 7),
+      );
+    case RizaDurumu.gerekli:
+    case RizaDurumu.bilinmiyor:
+      return AnalyticsRizasi.hepsiRed;
+  }
+}
