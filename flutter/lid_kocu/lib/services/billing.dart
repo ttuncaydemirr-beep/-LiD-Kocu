@@ -41,6 +41,15 @@ class Billing {
   bool sahip;
   void Function(bool sahip)? degisti;
 
+  final Completer<void> _ilk = Completer<void>();
+
+  /// İlk sahiplik sorgusu bitti (Play yanıtı, hata, zaman aşımı veya Billing yok). Reklam tarafı bunu bekler.
+  Future<void> get ilkSorgu => _ilk.future;
+
+  void _ilkBitti() {
+    if (!_ilk.isCompleted) _ilk.complete();
+  }
+
   Billing({this.sahip = false});
 
   bool get hazir => _hazir;
@@ -78,6 +87,8 @@ class Billing {
       if (_hazir) {
         unawaited(_urunAl());
         unawaited(geriYukle());
+      } else {
+        _ilkBitti(); // Play yok: beklenecek yanıt da yok
       }
       return _hazir;
     }();
@@ -163,6 +174,14 @@ class Billing {
 
   /// true/false = Play'in yanıtı, null = sorgu başarısız veya kesin değil (kayıtlı değer korunur).
   Future<bool?> geriYukle() async {
+    try {
+      return await _geriYukle();
+    } finally {
+      _ilkBitti();
+    }
+  }
+
+  Future<bool?> _geriYukle() async {
     if (!_hazir && !await _baglan()) return null;
     _geri?.complete(null);
     final c = Completer<bool?>();

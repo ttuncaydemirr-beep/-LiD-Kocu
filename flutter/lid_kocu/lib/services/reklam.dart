@@ -256,12 +256,26 @@ class Reklam {
     _odulluYukle();
   }
 
-  /// Hata sonrası yeniden deneme: 30 sn, 60 sn, 120 sn; sonra bir sonraki gösterme denemesine kadar beklenir.
+  /// Hata sonrası yeniden deneme: 30 sn, 60 sn, 120 sn; sonra [yenile] (öne dönüş, teklif alanı) beklenir.
   void _sonraDene(int hata, VoidCallback f) {
-    if (hata > 3) return;
-    Timer(Duration(seconds: 15 << hata), () {
+    final d = yenidenDenemeSuresi(hata);
+    if (d == null) return;
+    Timer(d, () {
       if (etkin) f();
     });
+  }
+
+  /// Öne dönüşte ve ödüllü teklif alanı görününce: hata sayaçlarını sıfırlayıp eksik reklamları yeniden ister
+  /// (ağ geri gelince ödüllü reklam o oturumda yine yüklenebilsin).
+  void yenile() {
+    if (!etkin) return;
+    _gecisHata = 0;
+    _odulluHata = 0;
+    if (!_sdkHazir && _rizaTamam) {
+      unawaited(_sdkBaslat());
+      return;
+    }
+    hazirla();
   }
 
   void _gecisYukle() {
@@ -351,30 +365,36 @@ class Reklam {
   }
 
   /// Ödüllü reklamı gösterir. [odul], reklam tamamen izlenince (onUserEarnedReward) çağrılır.
-  /// Dönen değer: reklam kapandığında ödül kazanılmış mıydı; reklam gösterilemediyse false.
-  Future<bool> odulluGoster(VoidCallback odul) async {
+  /// Dönen değer: reklam kapandığında ödül kazanılmış mıydı; reklam hiç gösterilemediyse [OdulluSonuc.gosterilemedi].
+  Future<OdulluSonuc> odulluGoster(VoidCallback odul) async {
     final ad = _odullu;
     if (ad == null || _tamEkran || !uygun(ReklamTuru.odullu)) {
       _odulluHata = 0;
       _odulluYukle();
-      return false;
+      return OdulluSonuc.gosterilemedi;
     }
     _odullu = null;
     _tamEkran = true;
     var kazandi = false;
-    final c = Completer<bool>();
+    var gosterildi = false;
+    final c = Completer<OdulluSonuc>();
     var kapandi = false;
     void bitir(Ad a) {
       if (kapandi) return;
       kapandi = true;
       a.dispose();
       _tamEkran = false;
-      if (!c.isCompleted) c.complete(kazandi);
+      if (!c.isCompleted) {
+        c.complete(kazandi
+            ? OdulluSonuc.kazanildi
+            : (gosterildi ? OdulluSonuc.kazanilmadi : OdulluSonuc.gosterilemedi));
+      }
       _odulluYukle();
       _bildir();
     }
 
     ad.fullScreenContentCallback = FullScreenContentCallback<RewardedAd>(
+      onAdShowedFullScreenContent: (_) => gosterildi = true,
       onAdDismissedFullScreenContent: bitir,
       onAdFailedToShowFullScreenContent: (a, e) => bitir(a),
     );

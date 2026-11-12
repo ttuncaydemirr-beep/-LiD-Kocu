@@ -1,4 +1,6 @@
 // Reklam kararları (lib/services/reklam_karar.dart) ve AppState'teki ek deneme hakkı.
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lid_kocu/core/veri.dart';
 import 'package:lid_kocu/services/reklam_karar.dart';
@@ -184,6 +186,71 @@ void main() {
     });
   });
 
+  group('gecis reklami zamani', () {
+    test('yalniz kullanici bitirdiyse ve cevap varsa', () {
+      expect(gecisIstenir(premium: false, kullaniciBitirdi: true, cevapVar: true), isTrue);
+      expect(gecisIstenir(premium: false, kullaniciBitirdi: false, cevapVar: true), isFalse);
+      expect(gecisIstenir(premium: false, kullaniciBitirdi: true, cevapVar: false), isFalse);
+      expect(gecisIstenir(premium: true, kullaniciBitirdi: true, cevapVar: true), isFalse);
+    });
+
+    test('zamanlayici dolunca sayfa en ustte degilse gosterilmez', () {
+      expect(gecisGosterilebilir(sayfaEnUstte: true, ayniSinav: true, bekliyor: true), isTrue);
+      expect(gecisGosterilebilir(sayfaEnUstte: false, ayniSinav: true, bekliyor: true), isFalse);
+      expect(gecisGosterilebilir(sayfaEnUstte: true, ayniSinav: false, bekliyor: true), isFalse);
+      expect(gecisGosterilebilir(sayfaEnUstte: true, ayniSinav: true, bekliyor: false), isFalse);
+    });
+  });
+
+  group('yukleme hatasinda yeniden deneme', () {
+    test('30, 60, 120 sn; sonra kendiliginden denenmez', () {
+      expect(yenidenDenemeSuresi(0), isNull);
+      expect(yenidenDenemeSuresi(1), const Duration(seconds: 30));
+      expect(yenidenDenemeSuresi(2), const Duration(seconds: 60));
+      expect(yenidenDenemeSuresi(3), const Duration(seconds: 120));
+      expect(yenidenDenemeSuresi(4), isNull);
+    });
+
+    test('odullu sonuc mesajlari ayri', () {
+      expect(odulluMesaji(OdulluSonuc.kazanildi), 'rewardGranted');
+      expect(odulluMesaji(OdulluSonuc.kazanilmadi), 'rewardFail');
+      expect(odulluMesaji(OdulluSonuc.gosterilemedi), 'rewardLoadFail');
+    });
+  });
+
+  group('premium bilgisi gec gelirse', () {
+    test('kayitli premium yoksa 4 sn beklenir, varsa beklenmez', () {
+      expect(premiumBekleme(kayitliPremium: false), const Duration(seconds: 4));
+      expect(premiumBekleme(kayitliPremium: true), isNull);
+    });
+
+    test('ilk sorgu premium derse reklam baslamaz', () async {
+      var premium = false;
+      final ilk = Future<void>.delayed(const Duration(milliseconds: 10), () => premium = true);
+      expect(
+        await reklamBaslatilsinMi(ilkSorgu: ilk, sure: const Duration(seconds: 4), premium: () => premium),
+        isFalse,
+      );
+    });
+
+    test('ilk sorgu premium degil derse reklam baslar', () async {
+      expect(
+        await reklamBaslatilsinMi(ilkSorgu: Future<void>.value(), sure: const Duration(seconds: 4), premium: () => false),
+        isTrue,
+      );
+    });
+
+    test('sorgu gelmezse zaman asiminda reklam baslar', () async {
+      final asla = Completer<void>().future;
+      final t = Stopwatch()..start();
+      expect(
+        await reklamBaslatilsinMi(ilkSorgu: asla, sure: const Duration(milliseconds: 50), premium: () => false),
+        isTrue,
+      );
+      expect(t.elapsedMilliseconds, lessThan(2000));
+    });
+  });
+
   group('reklam birimi kimligi', () {
     test('test derlemesinde test kimligi', () {
       expect(birimSec(test: true, uygulama: '', testBirim: 'T', gercekBirim: ''), 'T');
@@ -236,11 +303,30 @@ void main() {
       s.saat = () => gun1;
       expect(s.sinavBaslat(), isTrue);
       final x = s.sinav!;
+      s.sinavCevap(1);
       expect(s.gecisBekliyor(x), isFalse, reason: 'sinav sirasinda gecis reklami yok');
       s.sinavBitir();
       expect(s.gecisBekliyor(x), isTrue);
       expect(s.reklam.etkin, isFalse, reason: 'testte reklam SDK baslatilmaz');
       s.sonucGosterildi(x);
+      expect(s.gecisBekliyor(x), isFalse);
+    });
+
+    test('bos bitirilen veya suresi dolan sinavda gecis reklami istenmez', () async {
+      final s = await yeni({});
+      s.saat = () => gun1;
+      expect(s.sinavBaslat(), isTrue);
+      final bos = s.sinav!;
+      s.sinavBitir(); // hiç cevap yok
+      expect(s.gecisBekliyor(bos), isFalse);
+      s.sinavKapat();
+
+      expect(s.sinavBaslat(), isTrue);
+      final x = s.sinav!;
+      s.sinavCevap(1);
+      s.saat = () => gun1.add(const Duration(minutes: 61)); // ör. öne dönüşte süre doldu
+      s.onPlanaDondu();
+      expect(x.bitti, isTrue);
       expect(s.gecisBekliyor(x), isFalse);
     });
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../services/reklam.dart';
+import '../services/reklam_karar.dart' show OdulluSonuc, odulluMesaji;
 import 'durum.dart';
 import 'tema.dart';
 
@@ -109,18 +110,27 @@ class OdulluTeklif extends StatefulWidget {
 class _OdulluTeklifDurumu extends State<OdulluTeklif> {
   bool _mesgul = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Teklif alanı göründü: önceki yükleme hataları (ör. ağ yoktu) sıfırlanır, reklam yeniden istenir.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) DurumKapsami.oku(context).reklam.yenile();
+    });
+  }
+
   Future<void> _izle() async {
     final s = DurumKapsami.oku(context);
     final m = ScaffoldMessenger.of(context);
     setState(() => _mesgul = true);
-    bool ok;
+    OdulluSonuc r;
     try {
-      ok = await s.odulluIzle();
+      r = await s.odulluIzle();
     } catch (_) {
-      ok = false;
+      r = OdulluSonuc.gosterilemedi;
     }
     if (mounted) setState(() => _mesgul = false);
-    m.showSnackBar(SnackBar(content: Text(s.t(ok ? 'rewardGranted' : 'rewardFail'))));
+    m.showSnackBar(SnackBar(content: Text(s.t(odulluMesaji(r)))));
   }
 
   @override

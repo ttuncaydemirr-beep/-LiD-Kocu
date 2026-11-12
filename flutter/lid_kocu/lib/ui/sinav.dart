@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/veri.dart';
-import '../services/reklam_karar.dart' show gecisGecikmesi;
+import '../services/reklam_karar.dart' show gecisGecikmesi, gecisGosterilebilir;
 import '../state.dart';
 import 'ana_sayfa.dart' show ucretsizMetni;
 import 'durum.dart';
@@ -256,7 +256,8 @@ class _SonucDurumu extends State<_Sonuc> {
   }
 
   /// Geçiş reklamı: önce sonuç ekranı çizilir, ilk kareden [gecisGecikmesi] sonra (yüklüyse) reklam gelir.
-  /// Ekran o arada kapanırsa reklam gösterilmez.
+  /// Kullanıcı o arada dokunursa, sayfadan çıkarsa veya üstüne başka sayfa (ör. Premium) açılırsa gösterilmez;
+  /// sınav bekleyen olarak kalır ve sonuç ekranı yeniden açıldığında denenir.
   void _gecisPlanla() {
     _gecis?.cancel();
     final x = widget.sinav;
@@ -269,9 +270,26 @@ class _SonucDurumu extends State<_Sonuc> {
         return;
       }
       _gecis = Timer(gecisGecikmesi, () {
-        if (mounted && identical(widget.sinav, x)) s.sonucGosterildi(x);
+        _gecis = null;
+        if (!mounted) return;
+        final enUstte = ModalRoute.of(context)?.isCurrent ?? true;
+        if (gecisGosterilebilir(sayfaEnUstte: enUstte, ayniSinav: identical(widget.sinav, x), bekliyor: s.gecisBekliyor(x))) {
+          s.sonucGosterildi(x);
+        }
       });
     });
+  }
+
+  /// Kullanıcı sonuç ekranına dokundu (ör. Premium düğmesi): bekleyen reklam zamanlayıcısı iptal.
+  void _gecisIptal() {
+    _gecis?.cancel();
+    _gecis = null;
+  }
+
+  @override
+  void deactivate() {
+    _gecisIptal(); // sayfadan/sekmeden çıkıldı
+    super.deactivate();
   }
 
   @override
@@ -290,7 +308,10 @@ class _SonucDurumu extends State<_Sonuc> {
     final puan = x.puan;
     final gecti = x.gecti;
     final yanlis = x.sorular.length - puan;
-    return Column(
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) => _gecisIptal(),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 14,
       children: [
@@ -362,6 +383,7 @@ class _SonucDurumu extends State<_Sonuc> {
           ),
         ),
       ],
+      ),
     );
   }
 }

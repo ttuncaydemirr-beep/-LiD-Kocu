@@ -190,3 +190,61 @@ AnalyticsRizasi analyticsRizasi({
       return AnalyticsRizasi.hepsiRed;
   }
 }
+
+// ---- Geçiş reklamı zamanı
+/// Biten sınavdan sonra geçiş reklamı istenir mi. Yalnızca kullanıcı "Testi bitir"e basarak bitirdiyse ve en az bir
+/// cevap verdiyse; süre dolarak (öne dönüşte, açılışta) biten veya boş sınavda asla.
+bool gecisIstenir({required bool premium, required bool kullaniciBitirdi, required bool cevapVar}) =>
+    !premium && kullaniciBitirdi && cevapVar;
+
+/// Zamanlayıcı dolduğunda geçiş reklamı gösterilebilir mi: sonuç sayfası hâlâ en üstte ve aynı sınavı gösteriyor.
+bool gecisGosterilebilir({required bool sayfaEnUstte, required bool ayniSinav, required bool bekliyor}) =>
+    sayfaEnUstte && ayniSinav && bekliyor;
+
+// ---- Yükleme hatasında yeniden deneme
+/// Art arda en çok bu kadar hatadan sonra kendiliğinden deneme durur (öne dönüş ve teklif alanı sayacı sıfırlar).
+const int enCokOtomatikDeneme = 3;
+
+/// [hata]. ardışık hatadan sonra bekleme; artık kendiliğinden denenmeyecekse null. 30 sn, 60 sn, 120 sn.
+Duration? yenidenDenemeSuresi(int hata) =>
+    (hata < 1 || hata > enCokOtomatikDeneme) ? null : Duration(seconds: 15 << hata);
+
+// ---- Ödüllü reklam sonucu
+enum OdulluSonuc {
+  /// Reklam sonuna kadar izlendi, ek hak verildi.
+  kazanildi,
+
+  /// Reklam açıldı ama sonuna kadar izlenmedi.
+  kazanilmadi,
+
+  /// Reklam hiç gösterilemedi (yüklenemedi, ağ yok vb.).
+  gosterilemedi,
+}
+
+/// Ödüllü reklam sonucunun arayüz metni anahtarı.
+String odulluMesaji(OdulluSonuc s) => switch (s) {
+      OdulluSonuc.kazanildi => 'rewardGranted',
+      OdulluSonuc.kazanilmadi => 'rewardFail',
+      OdulluSonuc.gosterilemedi => 'rewardLoadFail',
+    };
+
+// ---- Premium bilgisi geç gelirse
+/// Kayıtlı Premium false iken reklam tarafını (UMP dahil) ilk satın alma sorgusuna kadar bekletme süresi.
+const Duration premiumBeklemeSuresi = Duration(seconds: 4);
+
+/// Reklam tarafı başlamadan önce ne kadar beklenir: kayıtlı Premium varsa beklemeye gerek yok (reklam yok).
+Duration? premiumBekleme({required bool kayitliPremium}) => kayitliPremium ? null : premiumBeklemeSuresi;
+
+/// [ilkSorgu] bitene ya da [sure] dolana kadar bekler; sonra [premium]'u okur. Reklam başlatılsın mı (Premium değil).
+Future<bool> reklamBaslatilsinMi({
+  required Future<void> ilkSorgu,
+  required Duration? sure,
+  required bool Function() premium,
+}) async {
+  if (sure != null) {
+    try {
+      await ilkSorgu.timeout(sure);
+    } catch (_) {}
+  }
+  return !premium();
+}

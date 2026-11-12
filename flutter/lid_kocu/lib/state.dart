@@ -89,8 +89,6 @@ class AppState extends ChangeNotifier {
   /// Sonuç ekranı çizilince geçiş reklamı gösterilecek (bu oturumda biten) sınav.
   Sinav? _gecisBekleyen;
 
-  /// [olustur] sürerken true: açılışta (kapalıyken süresi dolan) sınav için geçiş reklamı istenmez.
-  bool _acilis = true;
   Sinav? _sinav;
   final List<SinavKaydi> gecmis;
 
@@ -211,12 +209,11 @@ class AppState extends ChangeNotifier {
     st._yanlisZiyaret = p?.getBool('yanlisZiyaret') ?? false;
     st._sinav = oku<Sinav?>('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
     st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
-    st._acilis = false;
     // Play bağlantısı, Firebase ve reklam rızası ilk ekranı bekletmez. Premium'da reklam tarafı hiç başlamaz.
     if (sesli) {
       unawaited(b.baslat());
       unawaited(st.olcum.baslat());
-      unawaited(st.reklam.baslat());
+      unawaited(st._reklamBaslat());
     }
     return st;
   }
@@ -279,9 +276,9 @@ class AppState extends ChangeNotifier {
   bool get odulluSiniraUlasti =>
       !premium && reklam.odulluSecenek && !odulluHakKaldi(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi());
 
-  /// Ödüllü reklamı gösterir; tamamen izlenirse 1 ek deneme hakkı verir. Ödül kazanıldıysa true.
-  Future<bool> odulluIzle() async {
-    if (!odulluSunulur) return false;
+  /// Ödüllü reklamı gösterir; tamamen izlenirse 1 ek deneme hakkı verir.
+  Future<OdulluSonuc> odulluIzle() async {
+    if (!odulluSunulur) return OdulluSonuc.gosterilemedi;
     final ok = await reklam.odulluGoster(() {
       if (premium) return;
       final (t, n) = odulluSay(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi());
@@ -326,10 +323,22 @@ class AppState extends ChangeNotifier {
     return r;
   }
 
-  /// Uygulama ön plana döndü: süreyi denetle, satın almaları sessizce yenile.
+  /// Uygulama ön plana döndü: süreyi denetle, satın almaları sessizce yenile, eksik reklamları yeniden iste.
   void onPlanaDondu() {
     sureKontrol();
     unawaited(billing.yenile());
+    reklam.yenile();
+  }
+
+  /// Kayıtlı Premium false ise reklam tarafı (UMP dahil) ilk satın alma sorgusunu en çok 4 sn bekler:
+  /// Premium bilgisi geç gelirse reklam/rıza formu başlamasın. Premium çıkarsa yalnızca rıza durumu okunur.
+  Future<void> _reklamBaslat() async {
+    await reklamBaslatilsinMi(
+      ilkSorgu: billing.ilkSorgu,
+      sure: premiumBekleme(kayitliPremium: premium),
+      premium: () => premium,
+    );
+    await reklam.baslat(); // Premium ise form ve SDK yok (bkz. Reklam.baslat)
   }
 
   // ---- ayarlar
@@ -508,11 +517,11 @@ class AppState extends ChangeNotifier {
   void sinavBitir() {
     final x = _sinav;
     if (x == null || x.bitti) return;
-    _bitir(x);
+    _bitir(x, kullanici: true);
     _bildir();
   }
 
-  void _bitir(Sinav x, {bool sureDoldu = false}) {
+  void _bitir(Sinav x, {bool sureDoldu = false, bool kullanici = false}) {
     // Hiç cevap verilmeden süresi dolan sınav: hak düşer ama geçmişe ve açıklama hakkına yazılmaz.
     final bosSure = sureDoldu && x.cevaplar.every((c) => c == null);
     x.bitti = true;
@@ -533,8 +542,11 @@ class AppState extends ChangeNotifier {
       _p?.setInt('sinavSayisi', h.bitmis);
       if (h.gunlukTarih != null) _p?.setString('gunlukTarih', h.gunlukTarih!);
       _p?.setInt('ekHak', h.ekHak);
-      // Sonuç ekranı çizildikten sonra 1 geçiş reklamı (açılışta biten sınav için asla).
-      if (!_acilis) _gecisBekleyen = x;
+    }
+    // Sonuç ekranı çizildikten sonra 1 geçiş reklamı: yalnızca "Testi bitir" ile ve en az bir cevapla biten sınav.
+    // Süre dolarak (öne dönüşte, açılışta, arka planda) biten sınavda asla.
+    if (gecisIstenir(premium: premium, kullaniciBitirdi: kullanici, cevapVar: x.cevaplar.any((c) => c != null))) {
+      _gecisBekleyen = x;
     }
     olcum.olay('sinav_bitti', {'puan': x.puan, 'gecti': x.gecti ? 1 : 0});
     if (!bosSure) {

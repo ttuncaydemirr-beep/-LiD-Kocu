@@ -123,6 +123,12 @@ jobs:
         if: steps.anahtar.outputs.var == 'true'
         run: |
           set -o pipefail
+          # AdMob kimlikleri boşsa uyar (derleme kırılmaz): bu AAB'de reklam yüklenmez.
+          for k in admobUygulamaKimligi bannerBirimi gecisBirimi odulluBirimi; do
+            if grep -Eq "const String $k = '\s*';" lib/services/reklam_ayar.dart; then
+              echo "::warning title=AdMob kimliği boş::lib/services/reklam_ayar.dart içinde $k boş. Bu Play AAB'sinde reklam gösterilmez."
+            fi
+          done
           flutter build appbundle --release 2>&1 | tee aab.log || { tail -25 aab.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=AAB derlemesi::/'; echo; exit 1; }
           V=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr '+' '-')
           cp build/app/outputs/bundle/release/app-release.aab "LiD-Kocu-$V.aab"
