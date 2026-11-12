@@ -2,8 +2,8 @@ name: lid_kocu
 description: "LiD Koçu: Almanya vatandaşlık testine dört dilde hazırlık."
 publish_to: "none"
 
-# Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi.
-version: 1.0.0+2
+# Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi. 1.1.0+3: reklam ve ölçüm.
+version: 1.1.0+3
 
 environment:
   sdk: ">=3.11.0 <4.0.0"
@@ -23,6 +23,14 @@ dependencies:
   in_app_purchase_android: 0.5.5
   url_launcher: ^6.3.0
   flutter_tts: ^4.2.0
+  # Reklam ve ölçüm: tam sürüm sabitlendi (pubspec.lock depoda yok). reklam.dart / olcum.dart bu sürümlerin
+  # API'sine göre yazıldı; güncellerken elle yeniden doğrulayın.
+  # google_mobile_ads 9.2.0: Play Services Ads 25.5.0, UMP 4.0.0, minSdk 24, compileSdk 36.
+  google_mobile_ads: 9.2.0
+  # FlutterFire 5.x hattı: Firebase Android BoM 35, minSdk 24.
+  firebase_core: 5.0.0
+  firebase_analytics: 13.0.0
+  firebase_remote_config: 7.0.0
 
 dev_dependencies:
   flutter_test:

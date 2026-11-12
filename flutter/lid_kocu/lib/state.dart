@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/veri.dart';
 import 'services/billing.dart';
+import 'services/olcum.dart';
+import 'services/reklam.dart';
+import 'services/reklam_karar.dart';
 
 const List<String> diller = ['tr', 'en', 'de', 'ar'];
 const String destekEposta = 'nilkaren.tuncay.demir@gmail.com';
@@ -46,6 +49,12 @@ class AppState extends ChangeNotifier {
   final Metin metin;
   final SharedPreferences? _p;
   final Billing billing;
+
+  /// Firebase Analytics + Remote Config (google-services.json yoksa sessizce kapalı).
+  final Olcum olcum = Olcum();
+
+  /// AdMob + UMP. Yalnızca Premium olmayanlarda ve [olustur] sesli: true ise başlatılır.
+  late final Reklam reklam;
   final FlutterTts? _tts;
   /// Kimliğe göre soru (kayıtlı sınav ve yanlış listeleri için).
   final Map<String, Soru> _soruIndeksi;
@@ -66,6 +75,22 @@ class AppState extends ChangeNotifier {
 
   /// Günlük ücretsiz denemenin son kullanıldığı gün (gunAnahtari).
   String? gunlukTarih;
+
+  /// Ödüllü reklamla açılmış, henüz kullanılmamış ek deneme hakkı (kalıcı; sınav bitince düşer).
+  int ekHak;
+
+  /// Ödüllü reklamla ek hak açılan son gün ve o gün açılan sayı (günde en çok [gunlukOdulluSiniri]).
+  String? odulluTarih;
+  int odulluSayi;
+
+  /// İlk açılışta üretilen kalıcı 0–1 sayısı; kontrol grubunu belirler (bkz. [kontrolGrubu]).
+  final double reklamZar;
+
+  /// Sonuç ekranı çizilince geçiş reklamı gösterilecek (bu oturumda biten) sınav.
+  Sinav? _gecisBekleyen;
+
+  /// [olustur] sürerken true: açılışta (kapalıyken süresi dolan) sınav için geçiş reklamı istenmez.
+  bool _acilis = true;
   Sinav? _sinav;
   final List<SinavKaydi> gecmis;
 
@@ -94,18 +119,40 @@ class AppState extends ChangeNotifier {
       required this.sonuclar,
       required this.sinavSayisi,
       required this.gunlukTarih,
+      required this.ekHak,
+      required this.odulluTarih,
+      required this.odulluSayi,
+      required this.reklamZar,
       required this.gecmis,
       required this.karisik,
       required this.karisikTohum,
       required Map<String, String> calisKonum})
       : _calisKonum = calisKonum {
+    reklam = Reklam(
+      olcum: olcum,
+      premium: () => premium,
+      kontrolGrubu: () => kontrolGrubu,
+      odulluIstenir: () => odulluHakKaldi(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi()),
+      bannerYukseklik: _p?.getDouble('bannerYukseklik'),
+      bannerYukseklikKaydet: (h) => _p?.setDouble('bannerYukseklik', h),
+    );
+    reklam.degisti = _bildir;
+    olcum.uzakGeldi = () {
+      olcum.ozellik('reklam_grubu', reklamGrubu(kontrolGrubu));
+      reklam.hazirla();
+      _bildir();
+    };
     billing.degisti = (v) {
       _p?.setBool('premium', v);
+      if (v) {
+        reklam.kapat(); // satın alma anında bütün reklamlar kalkar
+        _gecisBekleyen = null;
+      }
       _bildir();
     };
   }
 
-  /// Testlerde sesli: false verilir: ses ve Play Billing başlatılmaz.
+  /// Testlerde sesli: false verilir: ses, Play Billing, reklam (AdMob/UMP) ve Firebase başlatılmaz.
   static Future<AppState> olustur({bool sesli = true}) async {
     final k = Katalog.json(jsonDecode(await rootBundle.loadString('assets/katalog.json')) as Map<String, dynamic>);
     final c = Ceviriler(jsonDecode(await rootBundle.loadString('assets/ceviriler.json')) as Map<String, dynamic>);
@@ -139,6 +186,8 @@ class AppState extends ChangeNotifier {
     };
 
     final b = Billing(sahip: p?.getBool('premium') ?? false);
+    final zar = zarSec(p?.getDouble('reklamZar'), () => Random().nextDouble());
+    if (p?.getDouble('reklamZar') != zar) p?.setDouble('reklamZar', zar);
     // Eski sürümden gelenler (ayar kaydı olan) kurulum ekranını görmez.
     final kurulum = p?.getBool('kurulum') ?? (p?.containsKey('eyalet') == true || p?.containsKey('sonuclar') == true);
     final st = AppState._(k, c, m, p, b, sesli ? FlutterTts() : null, indeks,
@@ -148,6 +197,10 @@ class AppState extends ChangeNotifier {
         sonuclar: s,
         sinavSayisi: p?.getInt('sinavSayisi') ?? 0,
         gunlukTarih: p?.getString('gunlukTarih'),
+        ekHak: p?.getInt('ekHak') ?? 0,
+        odulluTarih: p?.getString('odulluTarih'),
+        odulluSayi: p?.getInt('odulluSayi') ?? 0,
+        reklamZar: zar,
         gecmis: gecmis,
         karisik: p?.getBool('karisik') ?? false,
         karisikTohum: p?.getInt('karisikTohum') ?? 1,
@@ -158,8 +211,13 @@ class AppState extends ChangeNotifier {
     st._yanlisZiyaret = p?.getBool('yanlisZiyaret') ?? false;
     st._sinav = oku<Sinav?>('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
     st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
-    // Play bağlantısı ilk ekranı bekletmez.
-    if (sesli) unawaited(b.baslat());
+    st._acilis = false;
+    // Play bağlantısı, Firebase ve reklam rızası ilk ekranı bekletmez. Premium'da reklam tarafı hiç başlamaz.
+    if (sesli) {
+      unawaited(b.baslat());
+      unawaited(st.olcum.baslat());
+      unawaited(st.reklam.baslat());
+    }
     return st;
   }
 
@@ -204,7 +262,52 @@ class AppState extends ChangeNotifier {
   }
 
   bool get sinavAcik =>
-      premium || ucretsizSinavVar(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: simdi());
+      premium || sinavHakkiVar(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, ekHak: ekHak, simdi: simdi());
+
+  /// Ödüllü reklamla açılmış ek deneme; Premium'da 0.
+  int get ekHakKalan => premium ? 0 : ekHak;
+
+  // ---- reklam
+  /// Reklamsız kontrol grubu: banner ve geçiş reklamı görmez, ödüllü reklam seçeneğini görür.
+  bool get kontrolGrubu => kontrolGrubunda(reklamZar, olcum.sayi(rcKontrolOrani));
+
+  /// Hak bitince "Reklam izle, 1 deneme daha aç" sunulur mu (günlük sınır dahil).
+  bool get odulluSunulur =>
+      !premium && reklam.odulluSecenek && odulluHakKaldi(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi());
+
+  /// Bugün ödüllü reklamla açılabilecek ek hakların hepsi kullanıldı.
+  bool get odulluSiniraUlasti =>
+      !premium && reklam.odulluSecenek && !odulluHakKaldi(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi());
+
+  /// Ödüllü reklamı gösterir; tamamen izlenirse 1 ek deneme hakkı verir. Ödül kazanıldıysa true.
+  Future<bool> odulluIzle() async {
+    if (!odulluSunulur) return false;
+    final ok = await reklam.odulluGoster(() {
+      if (premium) return;
+      final (t, n) = odulluSay(tarih: odulluTarih, sayi: odulluSayi, simdi: simdi());
+      odulluTarih = t;
+      odulluSayi = n;
+      ekHak++;
+      _p?.setString('odulluTarih', t);
+      _p?.setInt('odulluSayi', n);
+      _p?.setInt('ekHak', ekHak);
+      olcum.olay('odullu_izlendi');
+      _bildir();
+    });
+    _bildir();
+    return ok;
+  }
+
+  /// Sonuç ekranı çizildikten sonra çağrılır: bu oturumda biten sınav için bir kez geçiş reklamı (yüklüyse).
+  void sonucGosterildi(Sinav x) {
+    if (!identical(_gecisBekleyen, x)) return;
+    _gecisBekleyen = null;
+    if (premium || !x.bitti) return;
+    reklam.gecisGoster();
+  }
+
+  /// Geçiş reklamı bekleyen sınav (test ve arayüz için).
+  bool gecisBekliyor(Sinav x) => identical(_gecisBekleyen, x);
 
   /// Bugün kalan ücretsiz deneme; Premium'da null.
   int? get ucretsizKalanSinav =>
@@ -212,6 +315,7 @@ class AppState extends ChangeNotifier {
 
   Future<SatinAlmaSonucu> satinAl() async {
     final r = await billing.satinAl();
+    if (r == SatinAlmaSonucu.alindi) olcum.olay('satin_alma');
     _bildir();
     return r;
   }
@@ -374,6 +478,7 @@ class AppState extends ChangeNotifier {
     }
     _sinav = Sinav(katalog.sinavSec(eyalet), simdi());
     _sinavKaydet();
+    olcum.olay('sinav_basladi');
     unawaited(sesDurdur());
     _bildir();
     return true;
@@ -419,13 +524,19 @@ class AppState extends ChangeNotifier {
     _kaydet();
     if (!premium) {
       // Hak, sınavın BAŞLADIĞI güne yazılır (terk edilip sonra süresi dolan sınav bugünün hakkını yemez).
+      // O gün ücretsiz hak varsa o, yoksa ödüllü reklamla açılmış ek hak düşer.
       final baslangic = x.bitis.subtract(sinavSuresi);
-      final (b, g) = ucretsizHakDus(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, simdi: baslangic);
-      sinavSayisi = b;
-      gunlukTarih = g;
-      _p?.setInt('sinavSayisi', b);
-      if (g != null) _p?.setString('gunlukTarih', g);
+      final h = sinavHakDus(bitmis: sinavSayisi, gunlukTarih: gunlukTarih, ekHak: ekHak, baslangic: baslangic);
+      sinavSayisi = h.bitmis;
+      gunlukTarih = h.gunlukTarih;
+      ekHak = h.ekHak;
+      _p?.setInt('sinavSayisi', h.bitmis);
+      if (h.gunlukTarih != null) _p?.setString('gunlukTarih', h.gunlukTarih!);
+      _p?.setInt('ekHak', h.ekHak);
+      // Sonuç ekranı çizildikten sonra 1 geçiş reklamı (açılışta biten sınav için asla).
+      if (!_acilis) _gecisBekleyen = x;
     }
+    olcum.olay('sinav_bitti', {'puan': x.puan, 'gecti': x.gecti ? 1 : 0});
     if (!bosSure) {
       _yanlisUcretsizAc(x.yanlislar); // bu sınavın ilk 3 yanlışı (sınavdaki sırayla) ücretsiz
       final tarih = simdi().isAfter(x.bitis) ? x.bitis : simdi();

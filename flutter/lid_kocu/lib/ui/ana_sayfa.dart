@@ -5,6 +5,7 @@ import '../core/veri.dart';
 import '../state.dart';
 import 'durum.dart';
 import 'premium.dart';
+import 'reklam_alani.dart';
 import 'soru_karti.dart';
 import 'tema.dart';
 
@@ -167,6 +168,8 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
                   ],
                 ),
         ),
+        // Tek banner: Premium kartının altında, yalnızca ücretsiz (ve kontrol grubunda olmayan) kullanıcıya.
+        if (!s.premium && s.reklam.bannerAlani) const ReklamBanner(),
       ],
     );
   }
@@ -174,7 +177,8 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
 
 /// Kalan ücretsiz deneme bilgisi.
 String ucretsizMetni(AppState s, int kalan) {
-  if (kalan <= 0) return s.t('freeNone');
+  final ek = s.ekHakKalan;
+  if (kalan <= 0) return ek > 0 ? s.t('bonusLeft', {'n': ek}) : s.t('freeNone');
   if (s.sinavSayisi >= ucretsizSinav) return s.t('freeToday');
   return s.t('freeLeft', {'n': kalan});
 }

@@ -4,10 +4,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/veri.dart';
+import '../services/reklam_karar.dart' show gecisGecikmesi;
 import '../state.dart';
 import 'ana_sayfa.dart' show ucretsizMetni;
 import 'durum.dart';
 import 'premium.dart';
+import 'reklam_alani.dart';
 import 'soru_karti.dart';
 import 'tema.dart';
 
@@ -34,6 +36,8 @@ class SinavSayfasi extends StatelessWidget {
             liveRegion: true,
             child: Kart(key: const ValueKey('sinav-limit'), child: Text(s.t('freeNone'))),
           ),
+          // "Reklam izle, 1 deneme daha aç" (yalnızca ücretsiz kullanıcı; Premium alanının yanında).
+          OdulluTeklif(onBasla: onBasla),
           const PremiumIcerik(),
         ],
       );
@@ -226,17 +230,63 @@ Future<void> _bitir(BuildContext context, AppState s, Sinav x) async {
   ustuneKaydir(context);
 }
 
-class _Sonuc extends StatelessWidget {
+class _Sonuc extends StatefulWidget {
   const _Sonuc({required this.sinav, required this.onBasla, required this.onYanlisCalis});
   final Sinav sinav;
   final VoidCallback onBasla;
   final VoidCallback onYanlisCalis;
 
   @override
+  State<_Sonuc> createState() => _SonucDurumu();
+}
+
+class _SonucDurumu extends State<_Sonuc> {
+  Timer? _gecis;
+
+  @override
+  void initState() {
+    super.initState();
+    _gecisPlanla();
+  }
+
+  @override
+  void didUpdateWidget(_Sonuc eski) {
+    super.didUpdateWidget(eski);
+    if (!identical(eski.sinav, widget.sinav)) _gecisPlanla();
+  }
+
+  /// Geçiş reklamı: önce sonuç ekranı çizilir, ilk kareden [gecisGecikmesi] sonra (yüklüyse) reklam gelir.
+  /// Ekran o arada kapanırsa reklam gösterilmez.
+  void _gecisPlanla() {
+    _gecis?.cancel();
+    final x = widget.sinav;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final s = DurumKapsami.oku(context);
+      if (!s.gecisBekliyor(x)) return;
+      if (!s.reklam.etkin) {
+        s.sonucGosterildi(x); // reklam kapalı (Premium, test): bekleyen işaret temizlenir, reklam yok
+        return;
+      }
+      _gecis = Timer(gecisGecikmesi, () {
+        if (mounted && identical(widget.sinav, x)) s.sonucGosterildi(x);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _gecis?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
     final r = Renk.of(context);
-    final x = sinav;
+    final x = widget.sinav;
+    final onBasla = widget.onBasla;
+    final onYanlisCalis = widget.onYanlisCalis;
     final puan = x.puan;
     final gecti = x.gecti;
     final yanlis = x.sorular.length - puan;

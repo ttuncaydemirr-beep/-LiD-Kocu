@@ -51,6 +51,13 @@ class PremiumIcerik extends StatefulWidget {
 class _PremiumIcerikState extends State<PremiumIcerik> {
   bool _mesgul = false;
 
+  @override
+  void initState() {
+    super.initState();
+    final s = DurumKapsami.oku(context);
+    if (!s.premium) s.olcum.olay('premium_ekrani');
+  }
+
   Future<void> _satinAl() async {
     final s = DurumKapsami.oku(context);
     final m = ScaffoldMessenger.of(context);
@@ -113,7 +120,7 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
               key: const ValueKey('premium-kisisel'),
               style: TextStyle(fontWeight: FontWeight.w700, color: r.vurgu, height: 1.4),
             ),
-          for (final k in const ['pf1', 'pf2', 'pf3', 'pf4'])
+          for (final k in const ['pf5', 'pf1', 'pf2', 'pf3', 'pf4'])
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

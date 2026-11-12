@@ -31,6 +31,13 @@ class AltBilgi extends StatelessWidget {
           Text(s.t('imgNote'), style: stil),
           _Baglanti(metin: s.t('src'), url: kaynakUrl),
           _Baglanti(metin: s.t('testCenter'), url: testMerkeziUrl),
+          // AB/AEA/İsviçre: UMP gerekli görürse (Premium'da reklam olmadığı için gösterilmez).
+          if (!s.premium && s.reklam.gizlilikGerekli)
+            _Baglanti(
+              key: const ValueKey('gizlilik-secenekleri'),
+              metin: s.t('privacyOptions'),
+              onTap: s.reklam.gizlilikSecenekleri,
+            ),
           Text(s.t('ver', {'d': s.katalog.surum}), style: stil),
           SelectableText(s.t('sup', {'m': destekEposta}), style: stil),
         ],
@@ -40,9 +47,10 @@ class AltBilgi extends StatelessWidget {
 }
 
 class _Baglanti extends StatelessWidget {
-  const _Baglanti({required this.metin, required this.url});
+  const _Baglanti({super.key, required this.metin, this.url, this.onTap});
   final String metin;
-  final String url;
+  final String? url;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +58,7 @@ class _Baglanti extends StatelessWidget {
     return Semantics(
       button: true,
       child: InkWell(
-        onTap: () => _ac(url),
+        onTap: onTap ?? () => _ac(url ?? ''),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48),
           child: Align(

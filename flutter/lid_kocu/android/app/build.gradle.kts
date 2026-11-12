@@ -4,6 +4,26 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") apply false
+}
+
+// ---------------------------------------------------------------- Firebase (android/app/google-services.json)
+// Dosya henüz yok: Firebase Console'dan indirilip buraya konunca (veya CI'da GOOGLE_SERVICES_JSON gizli değeriyle)
+// eklenti uygulanır. Dosya yokken derleme Firebase'siz sürer; uygulama çökmez, Analytics/Remote Config sessizce kapalıdır.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+// ---------------------------------------------------------------- AdMob uygulama kimliği (tek yer)
+// Değer lib/services/reklam_ayar.dart içindeki `admobUygulamaKimligi` satırından okunur ve AndroidManifest'e
+// ${admobUygulamaKimligi} olarak yazılır. Kullanıcı AdMob kimliğini verince reklam_ayar.dart'ta değiştir.
+// Boşsa Google'ın TEST uygulama kimliği kalır (reklam SDK'sı kimliksiz açılışta çöker; test kimliği bunu önler).
+val admobTestUygulamaKimligi = "ca-app-pub-3940256099942544~3347511713"
+val admobUygulamaKimligi: String = run {
+    val f = file("../../lib/services/reklam_ayar.dart")
+    val m = if (f.exists()) Regex("admobUygulamaKimligi\\s*=\\s*'([^']*)'").find(f.readText()) else null
+    val v = m?.groupValues?.get(1)?.trim().orEmpty()
+    v.ifEmpty { admobTestUygulamaKimligi }
 }
 
 // ---------------------------------------------------------------- Sürüm imzalama (android/key.properties)
@@ -44,6 +64,7 @@ android {
         // Play'e her yüklemede pubspec'teki +N artırılmalı (aynı versionCode ikinci kez yüklenemez).
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["admobUygulamaKimligi"] = admobUygulamaKimligi
     }
 
     signingConfigs {

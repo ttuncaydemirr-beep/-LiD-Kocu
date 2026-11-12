@@ -3,6 +3,8 @@
 # Play AAB: Actions > son çalışma > Artifacts > "lid-kocu-play-aab" (GitHub'a giriş gerekir).
 # İmza için dört gizli değer (Settings > Secrets and variables > Actions):
 #   KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+# Firebase (isteğe bağlı): GOOGLE_SERVICES_JSON = google-services.json dosyasının içeriği (düz metin veya base64).
+#   Yoksa uygulama Firebase'siz derlenir (Analytics/Remote Config sessizce kapalı).
 name: Derle
 
 permissions:
@@ -44,6 +46,27 @@ jobs:
           flutter-version: 3.47.9
           cache: true
       - run: flutter --version
+
+      - name: Firebase yapılandırması (GOOGLE_SERVICES_JSON varsa)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -f android/app/google-services.json ]; then
+            echo "::notice::android/app/google-services.json depoda var, o kullanılıyor."
+            exit 0
+          fi
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::notice::GOOGLE_SERVICES_JSON yok: Firebase'siz derleniyor (Analytics/Remote Config kapalı)."
+            exit 0
+          fi
+          case "$(printf '%s' "$GOOGLE_SERVICES_JSON" | tr -d '[:space:]' | cut -c1)" in
+            "{") printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json ;;
+            *) printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json ;;
+          esac
+          python3 -c "import json,sys; d=json.load(open('android/app/google-services.json')); ok=any(c.get('client_info',{}).get('android_client_info',{}).get('package_name')=='com.lidkocu.app' for c in d.get('client',[])); sys.exit(0 if ok else 1)" \
+            || { echo "::error::google-services.json geçersiz veya com.lidkocu.app paketi için değil"; exit 1; }
+          echo "google-services.json yazıldı."
+
       - run: flutter pub get
 
       - name: Analiz
@@ -55,7 +78,8 @@ jobs:
       - name: Deneme APK
         run: |
           set -o pipefail
-          flutter build apk --release 2>&1 | tee apk.log || { tail -25 apk.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=APK derlemesi::/'; echo; exit 1; }
+          # Deneme APK'sı Google'ın TEST reklamlarıyla derlenir (yerleşim telefonda görülsün). Play AAB'si gerçek kimlikleri kullanır.
+          flutter build apk --release --dart-define=TEST_REKLAM=true 2>&1 | tee apk.log || { tail -25 apk.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=APK derlemesi::/'; echo; exit 1; }
           cp build/app/outputs/flutter-apk/app-release.apk LiD-Kocu-deneme.apk
 
       - uses: actions/upload-artifact@v5
@@ -65,7 +89,8 @@ jobs:
           retention-days: 14
 
       - name: Deneme APK sürümünü güncelle
-        if: github.event_name != 'pull_request'
+        # Yalnızca main: başka dallardaki denemeler Releases'teki APK'yı değiştirmez (APK yine Artifacts'ta).
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -101,7 +126,7 @@ jobs:
           flutter build appbundle --release 2>&1 | tee aab.log || { tail -25 aab.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=AAB derlemesi::/'; echo; exit 1; }
           V=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr '+' '-')
           cp build/app/outputs/bundle/release/app-release.aab "LiD-Kocu-$V.aab"
-          rm -f android/upload.jks android/key.properties
+          rm -f android/upload.jks android/key.properties android/app/google-services.json
 
       - uses: actions/upload-artifact@v5
         if: steps.anahtar.outputs.var == 'true'

@@ -18,9 +18,30 @@ Resmî değildir; BAMF veya başka bir devlet kurumunu temsil etmez. Destek: nil
 - Cevabı zamanla değişen sorular: 72, 73, 75, 236 (`lib/core/veri.dart` > `guncelSorular`).
 
 ## Satış modeli
-Reklam yok. Sorular ve çevirileri ücretsiz. Ücretsiz: 2 deneme sınavı + her gün 1 (hak sınav bitince düşer), ilk 20 sorunun
+Sorular ve çevirileri ücretsiz. Ücretsiz: 2 deneme sınavı + her gün 1 (hak sınav bitince düşer), ilk 20 sorunun
 ve günün sorusunun açıklaması, her sınavın ilk 3 yanlışının açıklaması. Tek seferlik **Premium** (ürün kimliği `premium`):
-tüm açıklamalar, sınırsız deneme, yanlışların tamamı, Almanca sesli dinleme. Fiyat Play Console'da belirlenir.
+**reklamsız**, tüm açıklamalar, sınırsız deneme, yanlışların tamamı, Almanca sesli dinleme. Fiyat Play Console'da belirlenir.
+
+**Reklam (AdMob, yalnızca Premium olmayanlara; karar: `docs/reklam-karari.md`).** Premium'da reklam SDK'sı ve rıza formu
+hiç başlatılmaz; satın alma anında bütün reklamlar kalkar. İlk gün muafiyeti yok.
+1. **Ödüllü:** günlük ücretsiz hak bitince Deneme sınavı ekranında "Reklam izle, 1 deneme daha aç". Reklam tamamen
+   izlenince 1 ek hak (kalıcı, sınav bitince düşer; önce günün ücretsiz hakkı kullanılır). Günde en çok 3.
+2. **Geçiş:** her deneme sınavı sonucundan sonra 1 kez; sonuç ekranı çizildikten ~1 sn sonra, yüklüyse. Sınav sırasında
+   ve açılışta asla.
+3. **Banner:** ana sayfada Premium kartının altında tek anchored adaptive banner (yeri önceden ayrılır, üstünde 24 dp boşluk).
+   Sınav, çalışma kartları ve satın alma ekranında yok.
+- **Rıza:** Google UMP (AB/AEA/İsviçre). Reklam yalnızca `canRequestAds` true iken istenir; gerekiyorsa alt bilgide
+  "Gizlilik seçenekleri".
+- **Remote Config** (varsayılanlar kodda): `reklam_banner_acik`, `reklam_gecis_acik`, `reklam_odullu_acik` (true),
+  `kontrol_grubu_orani` (0.5). İlk açılışta kalıcı rastgele sayı < oran ise kullanıcı **reklamsız kontrol grubu**dur:
+  banner ve geçiş görmez, ödüllü seçeneği görür. Analytics user property `reklam_grubu` = `reklamli` | `kontrol`.
+- **Analytics olayları:** `sinav_basladi`, `sinav_bitti` (puan, gecti), `premium_ekrani`, `satin_alma`, `odullu_izlendi`,
+  `gecis_gosterildi`, `banner_yuklendi`, `banner_yuklenemedi`.
+- **Kimlikler:** AdMob uygulama ve 3 birim kimliği yalnızca `flutter/lid_kocu/lib/services/reklam_ayar.dart` içinde.
+  Boşken Play derlemesinde reklam yüklenmez; debug ve Deneme APK Google test reklamlarını gösterir.
+- **Firebase:** `flutter/lid_kocu/android/app/google-services.json` (depoya konur) veya Actions gizli değeri
+  `GOOGLE_SERVICES_JSON` (dosyanın içeriği). Yoksa uygulama Firebase'siz çalışır, olaylar boşa düşer.
+
 Mağaza metinleri (4 dil): `docs/magaza-kaydi.md`. Gizlilik: `docs/gizlilik.html` (GitHub Pages).
 
 ## Derleme (GitHub Actions)
@@ -39,7 +60,7 @@ Anahtar dosyası (`.jks`) ve şifresi depoya **konmaz**; iki güvenli yerde yede
 2. Kapalı test kanalına AAB yükle; 12+ test kullanıcısını ekle, 14 gün kesintisiz test.
 3. Para kazanma > Uygulama içi ürünler: kimliği `premium` olan tek seferlik ürün, etkin.
 4. Mağaza kaydında ve uygulama açıklamasında "resmî değildir" uyarısı, resmî kaynak bağlantısı; BAMF logosu kullanılmaz.
-5. Her yeni yüklemede `flutter/lid_kocu/pubspec.yaml` içindeki `version: 1.0.0+N` sayısını 1 artırın.
+5. Her yeni yüklemede `flutter/lid_kocu/pubspec.yaml` içindeki `version: X.Y.Z+N` sayısını (N) 1 artırın.
 
 ## Yayın öncesi açık işler
 - Türkçe ve Arapça metinleri birer anadil konuşuru okuyacak.
