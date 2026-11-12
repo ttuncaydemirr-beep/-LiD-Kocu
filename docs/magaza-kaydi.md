@@ -1,15 +1,15 @@
 # LiD Koçu: Google Play mağaza kaydı (de-DE, tr-TR, ar, en-US)
 
-Hazırlanma tarihi: 11 Kasım 2026. Dayanak: `gelir-politika.md` incelemesi ve README.md. Her metnin karakter sayısı Python `len()` ile sayılmıştır (satır sonu 1 karakter). Metinleri aşağıdaki kod bloklarından olduğu gibi Play Console'a yapıştır; blok işaretleri (```) dahil değildir.
+Hazırlanma tarihi: 11 Kasım 2026. Güncelleme: 13 Kasım 2026 (uygulama 1.1.0: reklam ve ölçüm düzeni; bkz. `reklam-karari.md`). Dayanak: `gelir-politika.md` incelemesi ve README.md. Her metnin karakter sayısı Python `len()` ile sayılmıştır (satır sonu 1 karakter). Metinleri aşağıdaki kod bloklarından olduğu gibi Play Console'a yapıştır; blok işaretleri (```) dahil değildir.
 
 ## 0. Özet tablo
 
 | Dil | Başlık (≤30) | Kısa açıklama (≤80) | Tam açıklama (≤4000) |
 |---|---|---|---|
-| de-DE | LiD Koçu: Einbürgerungstest (27) | Einbürgerungstest üben: Leben in Deutschland, mit Erklärungen in deiner Sprache (79) | 2182 karakter |
-| tr-TR | LiD Koçu: Almanya Vatandaşlık (29) | Almanya vatandaşlık testi: Türkçe çeviri, anadilde açıklama ve deneme sınavı (76) | 2033 karakter |
-| ar | LiD Koçu: اختبار الجنسية (24) | اختبار الجنسية الألمانية: الأسئلة بالألمانية مع الترجمة والشرح بالعربية (71) | 1866 karakter |
-| en-US | LiD Koçu: German Citizenship (28) | German citizenship test (Leben in Deutschland) with Turkish & Arabic help (73) | 2148 karakter |
+| de-DE | LiD Koçu: Einbürgerungstest (27) | Einbürgerungstest üben: Leben in Deutschland, mit Erklärungen in deiner Sprache (79) | 2383 karakter |
+| tr-TR | LiD Koçu: Almanya Vatandaşlık (29) | Almanya vatandaşlık testi: Türkçe çeviri, anadilde açıklama ve deneme sınavı (76) | 2219 karakter |
+| ar | LiD Koçu: اختبار الجنسية (24) | اختبار الجنسية الألمانية: الأسئلة بالألمانية مع الترجمة والشرح بالعربية (71) | 2055 karakter |
+| en-US | LiD Koçu: German Citizenship (28) | German citizenship test (Leben in Deutschland) with Turkish & Arabic help (73) | 2328 karakter |
 
 Başlık seçimleri (her dil ayrı değerlendirildi):
 - **de-DE**: `LiD Koçu: Einbürgerungstest`. Sınavın gerçek Almanca adı; Almanca arayan herkes bunu yazar.
@@ -32,7 +32,7 @@ LiD Koçu: Einbürgerungstest
 Einbürgerungstest üben: Leben in Deutschland, mit Erklärungen in deiner Sprache
 ```
 
-### Tam açıklama (2182 / 4000 karakter)
+### Tam açıklama (2383 / 4000 karakter)
 ```
 LiD Koçu ist keine amtliche App und steht in keiner Verbindung zum BAMF oder zu einer anderen Behörde.
 Quelle der Fragen (BAMF, Stand 07.05.2025): https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf
@@ -56,11 +56,11 @@ Das bekommst du:
 Erklärungen, die man versteht:
 Zu den Fragen gibt es einfache Erklärungen in deiner Sprache.
 
-Ohne Werbung, ohne Konto:
-• Keine Werbung
+Ohne Konto:
 • Kein Konto, keine Anmeldung
-• Funktioniert ohne Internet
-• Es werden keine Daten gesammelt
+• Lernen funktioniert auch ohne Internet
+• Die kostenlose Version enthält Werbung (Google AdMob); Premium ist werbefrei
+• Werbung und Nutzungsmessung laufen über Google (AdMob, Firebase); Einzelheiten stehen in der Datenschutzerklärung
 
 Kostenlos:
 • Alle Fragen mit allen Übersetzungen
@@ -68,8 +68,10 @@ Kostenlos:
 • Die Erklärung zur Frage des Tages
 • Die Erklärungen zu den ersten 20 Fragen
 • Die Erklärungen zu den ersten 3 falschen Antworten jedes Tests
+• Optional: Werbevideo ansehen und einen zusätzlichen Probetest freischalten
 
 Premium (einmal zahlen, kein Abo):
+• Keine Werbung
 • Einfache Erklärungen zu allen Fragen
 • Unbegrenzt Probetests
 • Alle falschen Antworten noch einmal üben
@@ -94,7 +96,7 @@ LiD Koçu: Almanya Vatandaşlık
 Almanya vatandaşlık testi: Türkçe çeviri, anadilde açıklama ve deneme sınavı
 ```
 
-### Tam açıklama (2033 / 4000 karakter)
+### Tam açıklama (2219 / 4000 karakter)
 ```
 LiD Koçu resmî bir uygulama değildir; BAMF veya herhangi bir devlet kurumuyla bağlantılı değildir.
 Soruların kaynağı (BAMF, Stand 07.05.2025): https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf
@@ -118,11 +120,11 @@ Gerçek sınav gibi çalış:
 Anlaşılır açıklamalar:
 Sorular için sade açıklamalar kendi dilinde yazıldı.
 
-Reklam yok, hesap yok:
-• Reklam yok
+Hesap yok:
 • Hesap açmak ya da giriş yapmak gerekmez
-• İnternetsiz çalışır
-• Hiçbir veri toplanmaz
+• Çalışmak için internet gerekmez
+• Ücretsiz sürümde reklam vardır (Google AdMob); Premium reklamsızdır
+• Reklam ve kullanım ölçümü Google üzerinden yapılır (AdMob, Firebase); ayrıntılar gizlilik politikasındadır
 
 Ücretsiz bölüm:
 • Tüm sorular ve tüm çeviriler
@@ -130,8 +132,10 @@ Reklam yok, hesap yok:
 • Günün sorusunun açıklaması
 • İlk 20 sorunun açıklaması
 • Her sınavın ilk 3 yanlışının açıklaması
+• İsteğe bağlı: reklam izleyerek 1 ek deneme sınavı aç
 
 Premium (tek ödeme, abonelik yok):
+• Reklamsız kullanım
 • Tüm soruların sade açıklamaları
 • Sınırsız deneme sınavı
 • Yanlışların tamamını tekrar çalışma
@@ -156,7 +160,7 @@ LiD Koçu: اختبار الجنسية
 اختبار الجنسية الألمانية: الأسئلة بالألمانية مع الترجمة والشرح بالعربية
 ```
 
-### Tam açıklama (1866 / 4000 karakter)
+### Tam açıklama (2055 / 4000 karakter)
 ```
 تطبيق LiD Koçu غير رسمي، ولا يرتبط بـ BAMF ولا بأي جهة حكومية أخرى.
 مصدر الأسئلة (كتالوج BAMF، الإصدار 07.05.2025): https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf
@@ -180,11 +184,11 @@ LiD Koçu: اختبار الجنسية
 شروح سهلة الفهم:
 تجد لكل سؤال شرحاً مبسّطاً بلغتك.
 
-بلا إعلانات وبلا حساب:
-• لا توجد إعلانات
+بلا حساب:
 • لا حاجة إلى إنشاء حساب أو تسجيل دخول
-• يعمل بدون إنترنت
-• لا يجمع أي بيانات
+• يمكنك التدرّب دون إنترنت
+• تحتوي النسخة المجانية على إعلانات (Google AdMob)، أما بريميوم فبلا إعلانات
+• تتم الإعلانات وقياس الاستخدام عبر Google ‏(AdMob وFirebase)، وتجد التفاصيل في سياسة الخصوصية
 
 المجاني:
 • جميع الأسئلة وجميع الترجمات
@@ -192,8 +196,10 @@ LiD Koçu: اختبار الجنسية
 • شرح سؤال اليوم
 • شرح أول 20 سؤالاً
 • شرح أول 3 أخطاء في كل اختبار
+• اختياري: شاهد إعلانًا لتفتح اختبارًا تجريبيًا إضافيًا
 
 النسخة المميزة Premium (دفعة واحدة، بلا اشتراك):
+• بلا إعلانات
 • شروح مبسّطة لجميع الأسئلة
 • اختبارات تجريبية بلا حدود
 • إعادة التدرّب على كل الأسئلة التي أخطأت فيها
@@ -218,7 +224,7 @@ LiD Koçu: German Citizenship
 German citizenship test (Leben in Deutschland) with Turkish & Arabic help
 ```
 
-### Tam açıklama (2148 / 4000 karakter)
+### Tam açıklama (2328 / 4000 karakter)
 ```
 LiD Koçu is not an official app and is not connected to the BAMF or any other government agency.
 Source of the questions (BAMF, Stand 07.05.2025): https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf
@@ -242,11 +248,11 @@ Practice like the real test:
 Explanations you can follow:
 The questions come with plain explanations in your own language.
 
-No ads, no account:
-• No ads
+No account:
 • No account or sign-in
-• Works offline
-• No data is collected
+• You can practice without internet
+• The free version contains ads (Google AdMob); Premium is ad-free
+• Ads and usage measurement run through Google (AdMob, Firebase); details are in the privacy policy
 
 Free:
 • All questions with all translations
@@ -254,8 +260,10 @@ Free:
 • The explanation for the question of the day
 • The explanations for the first 20 questions
 • The explanations for the first 3 wrong answers of every test
+• Optional: watch an ad to unlock 1 extra mock test
 
 Premium (pay once, no subscription):
+• No ads
 • Plain explanations for all questions
 • Unlimited mock tests
 • Practice all of your wrong answers again
@@ -312,7 +320,7 @@ Genel kurallar:
 Notlar:
 - 7. görüntü: Almanca ses telefonda kuruluysa çalışır; görüntü, "cihazın Almanca ses paketini kullanır" notunu da gösterirse iade ve 1 yıldız riski azalır (rapor M2b).
 - 8. görüntüde fiyat yazma; fiyat ülkeye göre değişir ve Play'den gelir.
-- Görüntülerde veri-toplanmıyor/çevrimdışı vurgusu istenirse 6. görüntünün alt satırına küçük bir not eklenebilir; ayrı bir görüntü gerekmez.
+- Görüntülerde "hesap yok" vurgusu istenirse 6. görüntünün alt satırına küçük bir not eklenebilir; ayrı bir görüntü gerekmez. "Veri toplanmaz" ya da "reklamsız" (Premium dışında) gibi yazılar kullanılmaz.
 
 ## 7. Öne çıkan grafik (1024 x 500) metin önerisi
 
@@ -338,9 +346,9 @@ Ad (43 / 55):
 ```
 Premium: alle Erklärungen, unbegrenzt Tests
 ```
-Açıklama (183 / 200):
+Açıklama (194 / 200):
 ```
-Einmal zahlen, kein Abo: einfache Erklärungen zu allen Fragen, unbegrenzt Probetests, alle falschen Antworten wiederholen und Fragen auf Deutsch anhören (deutsche Handy-Stimme nötig).
+Einmal zahlen, kein Abo: werbefrei, einfache Erklärungen zu allen Fragen, unbegrenzt Probetests, alle falschen Antworten wiederholen und Fragen auf Deutsch anhören (deutsche Handy-Stimme nötig).
 ```
 
 ### Türkçe (tr-TR)
@@ -349,9 +357,9 @@ Ad (41 / 55):
 ```
 Premium: tüm açıklamalar, sınırsız deneme
 ```
-Açıklama (170 / 200):
+Açıklama (181 / 200):
 ```
-Tek ödeme, abonelik yok: tüm soruların sade açıklamaları, sınırsız deneme sınavı, yanlışların tamamını tekrar ve soruları Almanca dinleme (telefonda Almanca ses gerekir).
+Tek ödeme, abonelik yok: reklamsız, tüm soruların sade açıklamaları, sınırsız deneme sınavı, yanlışların tamamını tekrar ve soruları Almanca dinleme (telefonda Almanca ses gerekir).
 ```
 
 ### Arapça (ar)
@@ -360,9 +368,9 @@ Ad (37 / 55):
 ```
 Premium: كل الشروح واختبارات بلا حدود
 ```
-Açıklama (151 / 200):
+Açıklama (164 / 200):
 ```
-دفعة واحدة، بلا اشتراك: شروح مبسّطة لكل الأسئلة، اختبارات تجريبية بلا حدود، إعادة كل الأخطاء، والاستماع للأسئلة بالألمانية (يلزم صوت ألماني في الهاتف).
+دفعة واحدة، بلا اشتراك: بلا إعلانات، شروح مبسّطة لكل الأسئلة، اختبارات تجريبية بلا حدود، إعادة كل الأخطاء، والاستماع للأسئلة بالألمانية (يلزم صوت ألماني في الهاتف).
 ```
 
 ### İngilizce (en-US)
@@ -371,9 +379,9 @@ Ad (42 / 55):
 ```
 Premium: all explanations, unlimited tests
 ```
-Açıklama (183 / 200):
+Açıklama (192 / 200):
 ```
-Pay once, no subscription: plain explanations for all questions, unlimited mock tests, practice all wrong answers again and listen to questions in German (needs a German phone voice).
+Pay once, no subscription: ad-free, plain explanations for all questions, unlimited mock tests, practice all wrong answers again and listen to questions in German (needs a German phone voice).
 ```
 
 ## 9. Yayın öncesi kontrol edilecekler
