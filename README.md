@@ -42,6 +42,8 @@ Anahtar dosyası (`.jks`) ve şifresi depoya **konmaz**; iki güvenli yerde yede
 5. Her yeni yüklemede `flutter/lid_kocu/pubspec.yaml` içindeki `version: 1.0.0+N` sayısını 1 artırın.
 
 ## Yayın öncesi açık işler
-- 9 sorunun cevabı resmî test merkezinde elle kontrol edilecek: 297, 98, 173, 184, 73, bremen-9, nordrhein-westfalen-4, saarland-4, brandenburg-1.
 - Türkçe ve Arapça metinleri birer anadil konuşuru okuyacak.
-- Satın alma gerçek telefonda, kapalı test kanalından kurulmuş sürümle denenecek.
+
+Tamamlananlar (12.11.2026): şüpheli 9 sorunun cevabı (73, 98, 173, 184, 297, bremen-9, nordrhein-westfalen-4,
+saarland-4, brandenburg-1) resmî BAMF test merkezinde kontrol edildi, hepsi doğru. Satın alma (promosyon koduyla)
+kapalı test sürümünde gerçek telefonda denendi, Premium açıldı. Mağaza kaydı 4 dilde hazır.
