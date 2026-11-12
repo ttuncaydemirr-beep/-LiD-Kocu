@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "331547194552",
+    "project_id": "lid-kocu",
+    "storage_bucket": "lid-kocu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:331547194552:android:089f1b9cfd24440a7a704d",
+        "android_client_info": {
+          "package_name": "com.lidkocu.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnKMIqvOOT96izh0TJIPvAeUepScbcVC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
