@@ -146,12 +146,12 @@ class AnalyticsRizasi {
       AnalyticsRizasi(analyticsStorage: true, adStorage: true, adUserData: true, adPersonalization: true);
 
   @override
-  bool operator ==(Object o) =>
-      o is AnalyticsRizasi &&
-      o.analyticsStorage == analyticsStorage &&
-      o.adStorage == adStorage &&
-      o.adUserData == adUserData &&
-      o.adPersonalization == adPersonalization;
+  bool operator ==(Object other) =>
+      other is AnalyticsRizasi &&
+      other.analyticsStorage == analyticsStorage &&
+      other.adStorage == adStorage &&
+      other.adUserData == adUserData &&
+      other.adPersonalization == adPersonalization;
 
   @override
   int get hashCode => Object.hash(analyticsStorage, adStorage, adUserData, adPersonalization);
