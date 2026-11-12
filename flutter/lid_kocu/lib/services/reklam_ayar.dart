@@ -10,16 +10,16 @@
 // kimlikleri kullanılır. Play'e giden derlemede (release) gerçek kimlik boşsa o reklam hiç yüklenmez.
 
 /// Android AdMob uygulama kimliği, ör. 'ca-app-pub-1234567890123456~1234567890'.
-const String admobUygulamaKimligi = ''; // kullanıcı AdMob kimliğini verince değiştir
+const String admobUygulamaKimligi = 'ca-app-pub-3269207938446570~2175660556';
 
 /// Ana sayfa banner'ı (anchored adaptive) reklam birimi, ör. 'ca-app-pub-1234567890123456/1111111111'.
-const String bannerBirimi = ''; // kullanıcı AdMob kimliğini verince değiştir
+const String bannerBirimi = 'ca-app-pub-3269207938446570/2067849342';
 
 /// Deneme sınavı sonucundan sonra gösterilen geçiş reklamı birimi.
-const String gecisBirimi = ''; // kullanıcı AdMob kimliğini verince değiştir
+const String gecisBirimi = 'ca-app-pub-3269207938446570/2434855861';
 
 /// "Reklam izle, 1 deneme daha aç" ödüllü reklam birimi.
-const String odulluBirimi = ''; // kullanıcı AdMob kimliğini verince değiştir
+const String odulluBirimi = 'ca-app-pub-3269207938446570/6414288465';
 
 // ---- Google'ın resmî Android test kimlikleri (developers.google.com/admob/android/test-ads). Değiştirmeyin.
 const String testUygulamaKimligi = 'ca-app-pub-3940256099942544~3347511713';
