@@ -1,9 +1,10 @@
-// Renk belirteçleri (web prototipiyle aynı), tema ve ortak küçük bileşenler.
+// Renk belirteçleri ("Klarheit" görsel kimliği), tema ve ortak küçük bileşenler.
+// Metin/zemin çiftleri WCAG AA (4.5:1), şık çerçevesi ve vurgu çizgileri en az 3:1 sağlar.
 import 'package:flutter/material.dart';
 
 @immutable
 class Renk {
-  final Color kagit, sayfa, yazi, soluk, cizgi, vurgu, vurguUstu, isaret, isaretUstu;
+  final Color kagit, sayfa, yazi, soluk, cizgi, secenekKenar, vurgu, vurguUstu, isaret, isaretUstu;
   final Color dogru, dogruZemin, yanlis, yanlisZemin;
   const Renk({
     required this.kagit,
@@ -11,6 +12,7 @@ class Renk {
     required this.yazi,
     required this.soluk,
     required this.cizgi,
+    required this.secenekKenar,
     required this.vurgu,
     required this.vurguUstu,
     required this.isaret,
@@ -22,12 +24,13 @@ class Renk {
   });
 
   static const Renk acik = Renk(
-    kagit: Color(0xFFF2F5F9),
+    kagit: Color(0xFFF3F6FB),
     sayfa: Color(0xFFFFFFFF),
     yazi: Color(0xFF14233B),
     soluk: Color(0xFF566479),
     cizgi: Color(0xFFD3DBE6),
-    vurgu: Color(0xFF1F4FD8),
+    secenekKenar: Color(0xFF6E7F9B),
+    vurgu: Color(0xFF1A47A8),
     vurguUstu: Color(0xFFFFFFFF),
     isaret: Color(0xFFFFC83D),
     isaretUstu: Color(0xFF2A2100),
@@ -43,8 +46,9 @@ class Renk {
     yazi: Color(0xFFE9EEF6),
     soluk: Color(0xFFA3B0C4),
     cizgi: Color(0xFF2E3B52),
-    vurgu: Color(0xFF8FB0FF),
-    vurguUstu: Color(0xFF0D1830),
+    secenekKenar: Color(0xFF7D8EAB),
+    vurgu: Color(0xFF8AABF0),
+    vurguUstu: Color(0xFF0B1630),
     isaret: Color(0xFFFFC83D),
     isaretUstu: Color(0xFF2A2100),
     dogru: Color(0xFF5FD6A4),
@@ -56,6 +60,9 @@ class Renk {
   static Renk of(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? koyu : acik;
 }
+
+/// Uygulamaya paketlenmiş tek yazı ailesi (Latin + Arapça), assets/fonts/ içinde.
+const String _yaziAilesi = 'Cairo';
 
 ThemeData temaOlustur(Brightness b) {
   final r = b == Brightness.dark ? Renk.koyu : Renk.acik;
@@ -74,11 +81,11 @@ ThemeData temaOlustur(Brightness b) {
   final sekil = RoundedRectangleBorder(borderRadius: BorderRadius.circular(6));
   const yazi = TextStyle(fontSize: 16, fontWeight: FontWeight.w700);
   const dolgu = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
-  final base = ThemeData(useMaterial3: true, colorScheme: cs);
+  final base = ThemeData(useMaterial3: true, colorScheme: cs, fontFamily: _yaziAilesi);
   return base.copyWith(
     scaffoldBackgroundColor: r.kagit,
     canvasColor: r.sayfa,
-    textTheme: base.textTheme.apply(bodyColor: r.yazi, displayColor: r.yazi),
+    textTheme: base.textTheme.apply(bodyColor: r.yazi, displayColor: r.yazi, fontFamily: _yaziAilesi),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, 48),
