@@ -30,7 +30,7 @@ class SinavSayfasi extends StatelessWidget {
     if (limit && !s.premium && (x == null || x.bitti)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 18,
+        spacing: Bosluk.b18,
         children: [
           Semantics(
             liveRegion: true,
@@ -47,7 +47,7 @@ class SinavSayfasi extends StatelessWidget {
       return Kart(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: Bosluk.b12,
           children: [
             Baslik(s.t('exam')),
             Text(s.t('examInfo')),
@@ -120,11 +120,7 @@ class _SinavSayaciDurumu extends State<SinavSayaci> {
         child: Text(
           _saat(_kalan),
           key: const ValueKey('sayac'),
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
+          style: Yazi.sayac,
         ),
       );
 }
@@ -140,7 +136,7 @@ class _Devam extends StatelessWidget {
     final n = x.sorular.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 14,
+      spacing: Bosluk.b14,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -162,7 +158,7 @@ class _Devam extends StatelessWidget {
           ),
         ),
         Row(
-          spacing: 10,
+          spacing: Bosluk.b10,
           children: [
             Expanded(
               child: OutlinedButton(
@@ -313,13 +309,13 @@ class _SonucDurumu extends State<_Sonuc> {
       onPointerDown: (_) => _gecisIptal(),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 14,
+      spacing: Bosluk.b14,
       children: [
         Kart(
           key: const ValueKey('sonuc'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               Align(
                 alignment: AlignmentDirectional.centerStart,
@@ -339,12 +335,7 @@ class _SonucDurumu extends State<_Sonuc> {
                   child: Text(
                     '$puan / $sinavSoruSayisi',
                     key: const ValueKey('puan'),
-                    style: const TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                    style: Yazi.puan,
                   ),
                 ),
               ),
@@ -371,7 +362,7 @@ class _SonucDurumu extends State<_Sonuc> {
         Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               SolukMetin(s.t('q', {'a': x.sira + 1, 'b': x.sorular.length})),
               SoruKarti(
@@ -402,15 +393,15 @@ class _Teklif extends StatelessWidget {
     final kilitli = yanlis - ucretsizYanlis;
     return Container(
       key: const ValueKey('sonuc-teklif'),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Bosluk.b16),
       decoration: BoxDecoration(
         color: kaldi ? r.yanlisZemin : r.sayfa,
         border: Border.all(color: kaldi ? r.yanlis : r.cizgi, width: kaldi ? 1.5 : 1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(Kose.kart),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 10,
+        spacing: Bosluk.b10,
         children: [
           Baslik(kilitli > 0 ? s.t('offerPersonal', {'n': kilitli}) : s.t('offerGeneric')),
           if (kaldi) Text(s.t('failHint')),
@@ -443,8 +434,8 @@ class NumaraSeridi extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 11,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
+        mainAxisSpacing: Bosluk.b4,
+        crossAxisSpacing: Bosluk.b4,
         children: [
           for (var i = 0; i < x.sorular.length; i++) _kutu(context, s, r, x, i),
         ],
@@ -519,14 +510,14 @@ class _Kutu extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             side: BorderSide(color: simdi ? vurgu : kenar, width: simdi ? 2.5 : 1),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(Kose.etiket),
           ),
           child: InkWell(
             onTap: onTap,
             child: Center(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text('$no', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: yazi)),
+                child: Text('$no', style: Yazi.etiketKucuk.copyWith(color: yazi)),
               ),
             ),
           ),

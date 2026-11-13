@@ -36,13 +36,13 @@ class SoruKarti extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12,
+      spacing: Bosluk.b12,
       children: [
         SoruBasligi(soru: soru),
         Align(alignment: AlignmentDirectional.centerStart, child: DinleDugmesi(soru: soru)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 8,
+          spacing: Bosluk.b8,
           children: [
             for (var i = 0; i < soru.secenekler.length; i++)
               _Secenek(
@@ -89,12 +89,12 @@ class SoruBasligi extends StatelessWidget {
     final String? cs = (c != null && c.soru.isNotEmpty) ? c.soru : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
+      spacing: Bosluk.b8,
       children: [
         Almanca(
           soru.de,
           key: const ValueKey('soru-de'),
-          stil: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, height: 1.35),
+          stil: Yazi.soru,
         ),
         if (cs != null)
           Text(cs, style: TextStyle(color: r.soluk, height: 1.4))
@@ -103,14 +103,14 @@ class SoruBasligi extends StatelessWidget {
         if (gDe.isNotEmpty) SolukMetin(s.t('noImg')),
         if (gDe.length == 1)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(color: r.kagit, borderRadius: BorderRadius.circular(6)),
+            padding: const EdgeInsets.symmetric(horizontal: Bosluk.b12, vertical: Bosluk.b10),
+            decoration: BoxDecoration(color: r.kagit, borderRadius: BorderRadius.circular(Kose.kontrol)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 6,
+              spacing: Bosluk.b6,
               children: [
                 Almanca(gDe[0]),
-                if (gCev.isNotEmpty) Text(gCev[0], style: TextStyle(color: r.soluk, fontSize: 15, height: 1.4)),
+                if (gCev.isNotEmpty) Text(gCev[0], style: Yazi.soluk.copyWith(color: r.soluk)),
               ],
             ),
           ),
@@ -147,7 +147,7 @@ class _Secenek extends StatelessWidget {
     final gDe = s.gorselDe(soru);
     final gCev = s.gorselCeviri(soru);
     final i = indeks;
-    final kucuk = TextStyle(color: r.soluk, fontSize: 15, height: 1.4);
+    final kucuk = Yazi.soluk.copyWith(color: r.soluk);
 
     final (Color kenar, Color zemin, double kalinlik) = switch (durum) {
       _Durum.dogru => (r.dogru, r.dogruZemin, 1.5),
@@ -166,22 +166,22 @@ class _Secenek extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           side: BorderSide(color: kenar, width: kalinlik),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(Kose.kontrol),
         ),
         child: InkWell(
           onTap: etkin && onSec != null ? () => onSec!(i) : null,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
+            constraints: const BoxConstraints(minHeight: Olcu.dokunma),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              padding: const EdgeInsets.symmetric(horizontal: Bosluk.b12, vertical: Bosluk.b11),
               child: Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: 2,
+                      spacing: Bosluk.b2,
                       children: [
-                        Almanca(soru.secenekler[i], stil: const TextStyle(fontSize: 17, height: 1.4)),
+                        Almanca(soru.secenekler[i], stil: Yazi.secenek),
                         if (c != null && i < c.secenekler.length) Text(c.secenekler[i], style: kucuk),
                         if (gDe.length == 4) Almanca(gDe[i], stil: kucuk),
                         if (gCev.length == 4) Text(gCev[i], style: kucuk),
@@ -189,7 +189,7 @@ class _Secenek extends StatelessWidget {
                     ),
                   ),
                   if (durum == _Durum.dogru || durum == _Durum.yanlis) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: Bosluk.b8),
                     ExcludeSemantics(
                       child: Icon(
                         durum == _Durum.dogru ? Icons.check_circle : Icons.cancel,
@@ -291,7 +291,7 @@ class AciklamaBolumu extends StatelessWidget {
       final fiyat = s.billing.fiyat;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 8,
+        spacing: Bosluk.b8,
         children: [
           SolukMetin(s.t('locked')),
           Align(
@@ -308,11 +308,11 @@ class AciklamaBolumu extends StatelessWidget {
     final a = s.aciklama(soru);
     if (a == null) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsetsDirectional.only(start: 10),
+      padding: const EdgeInsetsDirectional.only(start: Bosluk.b10),
       decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: r.isaret, width: 4))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 6,
+        spacing: Bosluk.b6,
         children: [
           if (!s.premium)
             Align(alignment: AlignmentDirectional.centerStart, child: Etiket(s.t('sample'), kucuk: true)),

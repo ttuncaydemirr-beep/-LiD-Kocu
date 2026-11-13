@@ -143,7 +143,7 @@ class _OdulluTeklifDurumu extends State<OdulluTeklif> {
         key: const ValueKey('odullu-acildi'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: Bosluk.b12,
           children: [
             if (s.ekHakKalan > 0) Semantics(liveRegion: true, child: Text(s.t('rewardGranted'))),
             FilledButton(
@@ -164,7 +164,7 @@ class _OdulluTeklifDurumu extends State<OdulluTeklif> {
       key: const ValueKey('odullu'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 10,
+        spacing: Bosluk.b10,
         children: [
           OutlinedButton.icon(
             key: const ValueKey('odullu-izle'),

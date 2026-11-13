@@ -26,6 +26,9 @@ jobs:
         run: |
           python3 web/tools/derle.py
           git diff --exit-code -- flutter/lid_kocu/assets || { echo "::error::flutter/lid_kocu/assets güncel değil: python3 web/tools/derle.py çalıştırıp gönderin"; exit 1; }
+      - name: Tasarım renkleri tasarim/tokens.json ile aynı mı
+        run: |
+          git diff --exit-code -- flutter/lid_kocu/lib/ui/renk.dart web/src/index.html flutter/lid_kocu/android/app/src/main/res || { echo "::error::Renkler tasarim/tokens.json ile aynı değil: renkleri yalnızca tokens.json'da değiştirin, python3 web/tools/derle.py çalıştırıp gönderin"; exit 1; }
 
   flutter:
     name: Flutter analiz, test ve derleme

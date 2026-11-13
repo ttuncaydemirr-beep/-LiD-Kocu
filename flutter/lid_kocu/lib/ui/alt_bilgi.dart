@@ -19,13 +19,13 @@ class AltBilgi extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = DurumKapsami.of(context);
     final r = Renk.of(context);
-    final stil = TextStyle(fontSize: 14, color: r.soluk, height: 1.4);
+    final stil = Yazi.altBilgi.copyWith(color: r.soluk);
     return Container(
-      padding: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(top: Bosluk.b12),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: r.cizgi))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 6,
+        spacing: Bosluk.b6,
         children: [
           Text(s.t('dis'), style: stil),
           Text(s.t('imgNote'), style: stil),
@@ -60,12 +60,12 @@ class _Baglanti extends StatelessWidget {
       child: InkWell(
         onTap: onTap ?? () => _ac(url ?? ''),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
+          constraints: const BoxConstraints(minHeight: Olcu.dokunma),
           child: Align(
             alignment: AlignmentDirectional.centerStart,
             child: Text(
               metin,
-              style: TextStyle(fontSize: 14, color: r.vurgu, decoration: TextDecoration.underline, height: 1.4),
+              style: Yazi.altBilgi.copyWith(color: r.vurgu, decoration: TextDecoration.underline),
             ),
           ),
         ),

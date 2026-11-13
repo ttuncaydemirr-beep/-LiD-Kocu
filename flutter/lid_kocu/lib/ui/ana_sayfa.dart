@@ -37,17 +37,17 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
     final devam = s.sinavDevamEdiyor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 18,
+      spacing: Bosluk.b18,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: Bosluk.b12,
           children: [
             Semantics(
               header: true,
               child: Text(
                 s.t('hero'),
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, height: 1.15),
+                style: Yazi.hero,
               ),
             ),
             Text(s.t('sub')),
@@ -56,7 +56,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
         Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               Baslik(s.t('state')),
               Acilir<String>(
@@ -70,7 +70,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
               ),
               ExcludeSemantics(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(Kose.cubuk),
                   child: LinearProgressIndicator(
                     value: havuz.isEmpty ? 0 : dogru / havuz.length,
                     minHeight: 10,
@@ -87,7 +87,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
           key: const ValueKey('hazirlik'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 8,
+            spacing: Bosluk.b8,
             children: [
               Baslik(s.t('ready', {'n': s.hazirlik})),
               if (ort != null)
@@ -108,7 +108,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
         Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               Baslik(s.t('today')),
               SoruKarti(
@@ -131,7 +131,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
         Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               Text(s.t('examInfo')),
               if (kalan != null && !devam) SolukMetin(ucretsizMetni(s, kalan)),
@@ -148,7 +148,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
               ? Row(
                   children: [
                     ExcludeSemantics(child: Icon(Icons.verified, color: r.dogru)),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: Bosluk.b10),
                     Expanded(
                       child: Text(s.t('owned'), style: TextStyle(fontWeight: FontWeight.w700, color: r.dogru)),
                     ),
@@ -156,7 +156,7 @@ class _AnaSayfaDurumu extends State<AnaSayfa> {
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 12,
+                  spacing: Bosluk.b12,
                   children: [
                     Baslik(s.t('premiumTitle')),
                     Text(s.t('premiumSub')),

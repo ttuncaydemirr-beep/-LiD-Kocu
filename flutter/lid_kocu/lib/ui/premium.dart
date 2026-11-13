@@ -30,7 +30,7 @@ class PremiumSayfasi extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),
               child: const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 32),
+                padding: EdgeInsets.fromLTRB(Bosluk.b16, Bosluk.b8, Bosluk.b16, Bosluk.b32),
                 child: PremiumIcerik(),
               ),
             ),
@@ -104,13 +104,13 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
     return Kart(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
+        spacing: Bosluk.b12,
         children: [
           Semantics(
             header: true,
             child: Text(
               s.t('premiumTitle'),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, height: 1.2),
+              style: Yazi.baslikBuyuk,
             ),
           ),
           Text(s.t('premiumSub'), style: const TextStyle(height: 1.5)),
@@ -125,7 +125,7 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ExcludeSemantics(child: Icon(Icons.check_circle, color: r.dogru, size: 22)),
-                const SizedBox(width: 10),
+                const SizedBox(width: Bosluk.b10),
                 Expanded(child: Text(s.t(k), style: const TextStyle(height: 1.4))),
               ],
             ),
@@ -135,7 +135,7 @@ class _PremiumIcerikState extends State<PremiumIcerik> {
               child: Row(
                 children: [
                   ExcludeSemantics(child: Icon(Icons.verified, color: r.dogru)),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: Bosluk.b10),
                   Expanded(
                     child: Text(s.t('owned'), style: TextStyle(fontWeight: FontWeight.w700, color: r.dogru)),
                   ),

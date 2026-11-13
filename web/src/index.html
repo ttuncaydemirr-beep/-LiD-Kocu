@@ -4,22 +4,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
 <style>
 /* Layout: one phone-width column, like a test booklet with a 33-box answer strip. */
+/*RENKLER: tasarim/tokens.json'dan üretilir (python3 web/tools/derle.py). Elle değiştirme.*/
+:root{--paper:#f3f6fb;--sheet:#ffffff;--ink:#14233b;--muted:#566479;--line:#d3dbe6;--control:#6e7f9b;--accent:#1a47a8;--on-accent:#ffffff;--mark:#ffc83d;--on-mark:#2a2100;--good:#0d7a4f;--good-bg:#dff5ea;--bad:#b3261e;--bad-bg:#fde7e5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;--control:#7d8eab;--accent:#8aabf0;--on-accent:#0b1630;--mark:#ffc83d;--on-mark:#2a2100;--good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;--control:#7d8eab;--accent:#8aabf0;--on-accent:#0b1630;--mark:#ffc83d;--on-mark:#2a2100;--good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}
+/*RENKLER SONU*/
 :root{
-  --paper:#f3f6fb;--sheet:#ffffff;--ink:#14233b;--muted:#566479;--line:#d3dbe6;--control:#6e7f9b;
-  --accent:#1a47a8;--on-accent:#ffffff;--mark:#ffc83d;--on-mark:#2a2100;
-  --good:#0d7a4f;--good-bg:#dff5ea;--bad:#b3261e;--bad-bg:#fde7e5;
   --display:"Cairo",system-ui,sans-serif;
   --body:"Cairo",system-ui,sans-serif;
   --arabic:"Cairo","Noto Sans Arabic",system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;--control:#7d8eab;
-  --accent:#8aabf0;--on-accent:#0b1630;--mark:#ffc83d;--on-mark:#2a2100;
-  --good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}}
-:root[data-theme="dark"]{
-  --paper:#0f1726;--sheet:#182235;--ink:#e9eef6;--muted:#a3b0c4;--line:#2e3b52;--control:#7d8eab;
-  --accent:#8aabf0;--on-accent:#0b1630;--mark:#ffc83d;--on-mark:#2a2100;
-  --good:#5fd6a4;--good-bg:#12382a;--bad:#ff9d94;--bad-bg:#47201d;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--body)}
 [lang="ar"],[dir="rtl"]{font-family:var(--arabic)}
