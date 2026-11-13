@@ -30,7 +30,7 @@ class SinavSayfasi extends StatelessWidget {
     if (limit && !s.premium && (x == null || x.bitti)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 18,
+        spacing: Bosluk.b18,
         children: [
           Semantics(
             liveRegion: true,
@@ -47,7 +47,7 @@ class SinavSayfasi extends StatelessWidget {
       return Kart(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: Bosluk.b12,
           children: [
             Baslik(s.t('exam')),
             Text(s.t('examInfo')),
@@ -120,11 +120,7 @@ class _SinavSayaciDurumu extends State<SinavSayaci> {
         child: Text(
           _saat(_kalan),
           key: const ValueKey('sayac'),
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
+          style: Yazi.sayac,
         ),
       );
 }
@@ -140,7 +136,7 @@ class _Devam extends StatelessWidget {
     final n = x.sorular.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 14,
+      spacing: Bosluk.b14,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -162,7 +158,7 @@ class _Devam extends StatelessWidget {
           ),
         ),
         Row(
-          spacing: 10,
+          spacing: Bosluk.b10,
           children: [
             Expanded(
               child: OutlinedButton(
@@ -313,13 +309,13 @@ class _SonucDurumu extends State<_Sonuc> {
       onPointerDown: (_) => _gecisIptal(),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 14,
+      spacing: Bosluk.b14,
       children: [
         Kart(
           key: const ValueKey('sonuc'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               Align(
                 alignment: AlignmentDirectional.centerStart,
@@ -339,12 +335,7 @@ class _SonucDurumu extends State<_Sonuc> {
                   child: Text(
                     '$puan / $sinavSoruSayisi',
                     key: const ValueKey('puan'),
-                    style: const TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                    style: Yazi.puan,
                   ),
                 ),
               ),
@@ -371,7 +362,7 @@ class _SonucDurumu extends State<_Sonuc> {
         Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               SolukMetin(s.t('q', {'a': x.sira + 1, 'b': x.sorular.length})),
               SoruKarti(
@@ -402,15 +393,15 @@ class _Teklif extends StatelessWidget {
     final kilitli = yanlis - ucretsizYanlis;
     return Container(
       key: const ValueKey('sonuc-teklif'),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Bosluk.b16),
       decoration: BoxDecoration(
         color: kaldi ? r.yanlisZemin : r.sayfa,
         border: Border.all(color: kaldi ? r.yanlis : r.cizgi, width: kaldi ? 1.5 : 1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(Kose.kart),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 10,
+        spacing: Bosluk.b10,
         children: [
           Baslik(kilitli > 0 ? s.t('offerPersonal', {'n': kilitli}) : s.t('offerGeneric')),
           if (kaldi) Text(s.t('failHint')),
@@ -443,31 +434,47 @@ class NumaraSeridi extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 11,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
+        mainAxisSpacing: Bosluk.b4,
+        crossAxisSpacing: Bosluk.b4,
         children: [
-          for (var i = 0; i < x.sorular.length; i++)
-            _Kutu(
-              key: ValueKey('kutu-$i'),
-              no: i + 1,
-              simdi: i == x.sira,
-              zemin: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogruZemin : r.yanlisZemin)
-                  : (x.cevaplar[i] != null ? r.yazi : Colors.transparent),
-              yazi: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogru : r.yanlis)
-                  : (x.cevaplar[i] != null ? r.kagit : r.soluk),
-              kenar: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogru : r.yanlis)
-                  : (x.cevaplar[i] != null ? r.yazi : r.cizgi),
-              vurgu: r.vurgu,
-              onTap: () {
-                s.sinavGit(i);
-                ustuneKaydir(context);
-              },
-            ),
+          for (var i = 0; i < x.sorular.length; i++) _kutu(context, s, r, x, i),
         ],
       ),
+    );
+  }
+
+  /// Sonuçta yanlış/boş kutu dolu `yanlis` zeminle çizilir: doğru kutudan renk tonunun yanında
+  /// açıklık farkıyla da ayrılır (renk körlüğü). Ekran okuyucu numarayla birlikte sonucu okur.
+  Widget _kutu(BuildContext context, AppState s, Renk r, Sinav x, int i) {
+    final no = i + 1;
+    final cevap = x.cevaplar[i];
+    final Color zemin, yazi, kenar;
+    final String etiket;
+    if (x.bitti) {
+      final dogru = cevap == x.sorular[i].dogru;
+      zemin = dogru ? r.dogruZemin : r.yanlis;
+      yazi = dogru ? r.dogru : r.sayfa;
+      kenar = dogru ? r.dogru : r.yanlis;
+      etiket = s.t(dogru ? 'boxRight' : (cevap == null ? 'boxEmpty' : 'boxWrong'), {'n': no});
+    } else {
+      zemin = cevap != null ? r.yazi : Colors.transparent;
+      yazi = cevap != null ? r.kagit : r.soluk;
+      kenar = cevap != null ? r.yazi : r.cizgi;
+      etiket = s.t(cevap != null ? 'boxAnswered' : 'boxEmpty', {'n': no});
+    }
+    return _Kutu(
+      key: ValueKey('kutu-$i'),
+      no: no,
+      etiket: etiket,
+      simdi: i == x.sira,
+      zemin: zemin,
+      yazi: yazi,
+      kenar: kenar,
+      vurgu: r.vurgu,
+      onTap: () {
+        s.sinavGit(i);
+        ustuneKaydir(context);
+      },
     );
   }
 }
@@ -476,6 +483,7 @@ class _Kutu extends StatelessWidget {
   const _Kutu({
     super.key,
     required this.no,
+    required this.etiket,
     required this.simdi,
     required this.zemin,
     required this.yazi,
@@ -485,6 +493,7 @@ class _Kutu extends StatelessWidget {
   });
 
   final int no;
+  final String etiket;
   final bool simdi;
   final Color zemin, yazi, kenar, vurgu;
   final VoidCallback onTap;
@@ -493,7 +502,7 @@ class _Kutu extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         button: true,
         selected: simdi,
-        label: '$no',
+        label: etiket,
         excludeSemantics: true,
         onTap: onTap,
         child: Material(
@@ -501,14 +510,14 @@ class _Kutu extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             side: BorderSide(color: simdi ? vurgu : kenar, width: simdi ? 2.5 : 1),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(Kose.etiket),
           ),
           child: InkWell(
             onTap: onTap,
             child: Center(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text('$no', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: yazi)),
+                child: Text('$no', style: Yazi.etiketKucuk.copyWith(color: yazi)),
               ),
             ),
           ),

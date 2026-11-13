@@ -22,3 +22,7 @@ html = html.replace("/*KATALOG*/null", guvenli(sk(K))).replace("/*CEVIRI*/null",
 (app / "katalog.json").write_text(sk(K), encoding="utf-8")
 (app / "ceviriler.json").write_text(sk(C), encoding="utf-8")
 print("web", len(html.encode()), "bayt; sorular", len(K["general"]) + sum(len(v["q"]) for v in K["states"].values()), "; çeviriler", len(C))
+
+# Tasarım renkleri (tasarim/tokens.json) -> renk.dart, web renk bloğu, Android colors.xml
+import runpy
+runpy.run_path(str(kok.parent / "tasarim/uret.py"))

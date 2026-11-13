@@ -2,8 +2,8 @@ name: lid_kocu
 description: "LiD Koçu: Almanya vatandaşlık testine dört dilde hazırlık."
 publish_to: "none"
 
-# Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi. 1.1.0+3: reklam ve ölçüm.
-version: 1.1.0+3
+# Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi. 1.1.0+3: reklam ve ölçüm. 1.1.1+4: erişilebilirlik, tutarlı tema, renk körü modu.
+version: 1.1.1+4
 
 environment:
   sdk: ">=3.11.0 <4.0.0"
@@ -52,3 +52,5 @@ flutter:
           weight: 600
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
+        - asset: assets/fonts/Cairo-ExtraBold.ttf
+          weight: 800

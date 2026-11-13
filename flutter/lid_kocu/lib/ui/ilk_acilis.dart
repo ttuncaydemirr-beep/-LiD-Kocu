@@ -33,14 +33,14 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
     final r = Renk.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 14,
+      spacing: Bosluk.b14,
       children: [
         // Başlık dört dilde: telefon dili ne olursa olsun herkes kendi dilini bulur.
         Semantics(
           header: true,
           child: Text(
             [for (final d in _kurulumDilleri) s.metin.t(d, 'chooseLang')].join(' · '),
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.3),
+            style: Yazi.baslikOrta,
           ),
         ),
         for (final d in _kurulumDilleri)
@@ -55,7 +55,7 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
                 side: BorderSide(color: s.dil == d ? r.vurgu : r.cizgi, width: 1.5),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(Kose.kart),
               ),
               child: InkWell(
                 key: ValueKey('kur-dil-$d'),
@@ -63,18 +63,14 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 64),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: Bosluk.b16, vertical: Bosluk.b12),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             dilAdlari[d]!,
                             textDirection: d == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: s.dil == d ? r.vurguUstu : r.yazi,
-                            ),
+                            style: Yazi.dilAdi.copyWith(color: s.dil == d ? r.vurguUstu : r.yazi),
                           ),
                         ),
                         if (s.dil == d) ExcludeSemantics(child: Icon(Icons.check_circle, color: r.vurguUstu)),
@@ -85,7 +81,7 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
               ),
             ),
           ),
-        const SizedBox(height: 4),
+        const SizedBox(height: Bosluk.b4),
         FilledButton(
           key: const ValueKey('kurulum-devam'),
           onPressed: () => setState(() => _adim = 1),
@@ -99,13 +95,13 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
     final r = Renk.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12,
+      spacing: Bosluk.b12,
       children: [
         Semantics(
           header: true,
           child: Text(
             s.t('chooseState'),
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, height: 1.25),
+            style: Yazi.baslikBuyuk.copyWith(height: 1.25),
           ),
         ),
         SolukMetin(s.t('stateHint')),
@@ -122,10 +118,10 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
                   onTap: () => setState(() => _eyalet = e.key),
                   child: InkWell(
                     key: ValueKey('kur-eyalet-${e.key}'),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(Kose.kontrol),
                     onTap: () => setState(() => _eyalet = e.key),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 48),
+                      constraints: const BoxConstraints(minHeight: Olcu.dokunma),
                       child: Row(
                         children: [
                           ExcludeSemantics(
@@ -134,9 +130,9 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
                               color: _eyalet == e.key ? r.vurgu : r.soluk,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: Bosluk.b12),
                           // Eyalet adları Almancadır.
-                          Expanded(child: Almanca(e.value.ad, stil: const TextStyle(fontSize: 17))),
+                          Expanded(child: Almanca(e.value.ad, stil: Yazi.eyalet)),
                         ],
                       ),
                     ),
@@ -146,7 +142,7 @@ class _IlkAcilisDurumu extends State<IlkAcilis> {
           ),
         ),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(Bosluk.b12),
           decoration: BoxDecoration(
             color: r.kagit,
             border: BorderDirectional(start: BorderSide(color: r.isaret, width: 4)),

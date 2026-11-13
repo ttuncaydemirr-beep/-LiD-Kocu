@@ -71,7 +71,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
 
     final ust = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 6,
+      spacing: Bosluk.b6,
       children: [
         SolukMetin(s.t('filter')),
         Acilir<String>(
@@ -122,7 +122,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
         icerik = Kart(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
+            spacing: Bosluk.b12,
             children: [
               SolukMetin(s.t('q', {'a': i + 1, 'b': l.length})),
               SoruKarti(
@@ -150,7 +150,7 @@ class _CalisDurumu extends State<CalisSayfasi> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 18,
+      spacing: Bosluk.b18,
       children: [ust, icerik],
     );
   }
@@ -170,12 +170,12 @@ class _KilitKarti extends StatelessWidget {
       key: const ValueKey('yanlis-kilit'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
+        spacing: Bosluk.b12,
         children: [
           Row(
             children: [
               const ExcludeSemantics(child: Icon(Icons.lock)),
-              const SizedBox(width: 10),
+              const SizedBox(width: Bosluk.b10),
               Expanded(child: Baslik(s.t('lockedRest', {'n': kalan}))),
             ],
           ),

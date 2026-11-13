@@ -37,8 +37,8 @@ class _Kok extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: temaOlustur(Brightness.light),
-      darkTheme: temaOlustur(Brightness.dark),
+      theme: temaOlustur(Brightness.light, renkKoru: s.renkKoru),
+      darkTheme: temaOlustur(Brightness.dark, renkKoru: s.renkKoru),
       themeMode: ThemeMode.system,
       home: const Kabuk(),
     );
@@ -123,7 +123,7 @@ class _KabukDurumu extends State<Kabuk> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 620),
                 child: const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 24, 16, 40),
+                  padding: EdgeInsets.fromLTRB(Bosluk.b16, Bosluk.b24, Bosluk.b16, Bosluk.b40),
                   child: IlkAcilis(),
                 ),
               ),
@@ -147,10 +147,10 @@ class _KabukDurumu extends State<Kabuk> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 620),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+                  padding: const EdgeInsets.fromLTRB(Bosluk.b16, Bosluk.b16, Bosluk.b16, Bosluk.b40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 18,
+                    spacing: Bosluk.b18,
                     children: [
                       const _Ust(),
                       _Sekmeler(secili: _sekme, secildi: _sekmeSec, state: s),
@@ -178,7 +178,7 @@ class _Ust extends StatelessWidget {
     final s = DurumKapsami.of(context);
     final r = Renk.of(context);
     return Wrap(
-      spacing: 10,
+      spacing: Bosluk.b10,
       runSpacing: 10,
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -192,14 +192,14 @@ class _Ust extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('LiD', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1)),
-                const SizedBox(width: 6),
+                const Text('LiD', style: Yazi.marka),
+                const SizedBox(width: Bosluk.b6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(color: r.isaret, borderRadius: BorderRadius.circular(4)),
+                  padding: const EdgeInsets.symmetric(horizontal: Bosluk.b6),
+                  decoration: BoxDecoration(color: r.isaret, borderRadius: BorderRadius.circular(Kose.etiket)),
                   child: Text(
                     'Koçu',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, color: r.isaretUstu),
+                    style: Yazi.marka.copyWith(height: 1.1, color: r.isaretUstu),
                   ),
                 ),
               ],
@@ -208,7 +208,7 @@ class _Ust extends StatelessWidget {
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
-          spacing: 4,
+          spacing: Bosluk.b4,
           children: [
             for (final d in diller)
               Semantics(
@@ -219,27 +219,23 @@ class _Ust extends StatelessWidget {
                 onTap: () => s.dilSec(d),
                 child: InkWell(
                   key: ValueKey('dil-$d'),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Kose.kart),
                   onTap: () => s.dilSec(d),
                   child: SizedBox(
                     width: 48,
                     height: 48,
                     child: Padding(
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(Bosluk.b3),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: s.dil == d ? r.yazi : Colors.transparent,
                           border: Border.all(color: s.dil == d ? r.yazi : r.cizgi),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(Kose.kontrol),
                         ),
                         child: Center(
                           child: Text(
                             _kisa[d]!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: s.dil == d ? r.kagit : r.yazi,
-                            ),
+                            style: Yazi.dilKisa.copyWith(color: s.dil == d ? r.kagit : r.yazi),
                           ),
                         ),
                       ),
@@ -282,9 +278,9 @@ class _Sekmeler extends StatelessWidget {
                   key: ValueKey(_kimlik[i]),
                   onTap: () => secildi(i),
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 48),
+                    constraints: const BoxConstraints(minHeight: Olcu.dokunma),
                     alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: Bosluk.b4, vertical: Bosluk.b10),
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(color: i == secili ? r.vurgu : Colors.transparent, width: 3),
@@ -293,11 +289,7 @@ class _Sekmeler extends StatelessWidget {
                     child: Text(
                       state.t(_anahtarlar[i]),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: i == secili ? r.yazi : r.soluk,
-                      ),
+                      style: Yazi.dugme.copyWith(color: i == secili ? r.yazi : r.soluk),
                     ),
                   ),
                 ),

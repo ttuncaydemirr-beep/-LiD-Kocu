@@ -7,6 +7,7 @@ Resmî değildir; BAMF veya başka bir devlet kurumunu temsil etmez. Destek: nil
 |---|---|
 | `flutter/lid_kocu/` | **Asıl uygulama** (Flutter, Android kimliği `com.lidkocu.app`). Play Store'a buradan derlenir. |
 | `web/` | Web önizleme ve tüm verinin kaynağı. Kurallar önce burada denenir. |
+| `tasarim/` | Tasarım belirteçleri (`tokens.json`: renkler, yazı, boşluk, köşe). Renkler yalnızca burada değiştirilir; `python3 web/tools/derle.py` Flutter `renk.dart`, web renkleri ve Android `colors.xml`'i üretir. |
 | `web/veri/` | Resmî katalog metni (Stand 07.05.2025), cevap anahtarı, özgün çeviri ve açıklamalar |
 | `.github/workflows/derle.yml` | Her gönderimde analiz, test, deneme APK ve Play AAB |
 
