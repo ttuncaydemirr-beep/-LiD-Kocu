@@ -3,7 +3,7 @@ description: "LiD Koçu: Almanya vatandaşlık testine dört dilde hazırlık."
 publish_to: "none"
 
 # Play'e her yüklemede "+N" kısmını (versionCode) 1 artırın. +1 kapalı teste yüklendi. 1.1.0+3: reklam ve ölçüm.
-version: 1.1.0+3
+version: 1.1.1+4
 
 environment:
   sdk: ">=3.11.0 <4.0.0"

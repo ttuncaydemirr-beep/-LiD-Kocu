@@ -77,13 +77,12 @@ ThemeData temaOlustur(Brightness b) {
   const yazi = Yazi.dugme;
   const dolgu = EdgeInsets.symmetric(horizontal: Bosluk.b16, vertical: Bosluk.b12);
   final base = ThemeData(useMaterial3: true, colorScheme: cs, fontFamily: _yaziAilesi);
+  final uygulanmis = base.textTheme.apply(bodyColor: r.yazi, displayColor: r.yazi, fontFamily: _yaziAilesi);
   return base.copyWith(
     scaffoldBackgroundColor: r.kagit,
     canvasColor: r.sayfa,
     // Gövde metni: Material varsayılanı 14 px yerine 16 px / 1.5 (Almanca ve uzun açıklamalar için okunurluk).
-    textTheme: base.textTheme
-        .apply(bodyColor: r.yazi, displayColor: r.yazi, fontFamily: _yaziAilesi)
-        .copyWith(bodyMedium: base.textTheme.bodyMedium?.merge(Yazi.govde)),
+    textTheme: uygulanmis.copyWith(bodyMedium: uygulanmis.bodyMedium?.copyWith(fontSize: 16, height: 1.5)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, Olcu.dokunma),
