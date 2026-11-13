@@ -5,33 +5,33 @@ import 'package:flutter/material.dart';
 
 @immutable
 class Renk {
-  /// Paper: the scaffold background behind every screen, and the inset ground of picture descriptions inside a card. Also the text colour on filled yazi (selected language key, answered strip box).
+  /// Kâğıt: her ekranın arkasındaki zemin ve kart içindeki görsel açıklamasının iç zemini. Dolu `yazi` üzerindeki metin rengi de budur (seçili dil tuşu, cevaplanmış şerit kutusu).
   final Color kagit;
-  /// Sheet: Kart, Acilir and option surfaces, dialogs and canvas. Also onError.
+  /// Sayfa: Kart, Acilir, şık yüzeyleri, diyaloglar. Ayrıca onError ve sonuç şeridinde dolu `yanlis` kutudaki numara.
   final Color sayfa;
-  /// Ink: all primary text on kagit, sayfa, dogruZemin and yanlisZemin (14.5:1 light, 15.4:1 dark on kagit). Also the fill of a selected language key and an answered strip box.
+  /// Mürekkep: kagit, sayfa, dogruZemin ve yanlisZemin üzerindeki tüm ana metin (kagit üzerinde açıkta 14,5:1, koyuda 15,4:1). Seçili dil tuşu, cevaplanmış şerit kutusu ve bildirim çubuğu zemini.
   final Color yazi;
-  /// Muted text (SolukMetin): translations under the German line, hints, dates, footer, unanswered strip numbers. Reads 5.5:1 on kagit and 5.1:1 on yanlisZemin in light; 7.2:1 on sayfa in dark.
+  /// Soluk metin (SolukMetin): Almanca satırın altındaki çeviriler, ipuçları, tarihler, alt bilgi, cevaplanmamış şerit numaraları. Açıkta kagit üzerinde 5,5:1, yanlisZemin üzerinde 5,1:1; koyuda sayfa üzerinde 7,2:1.
   final Color soluk;
-  /// Hairline: Kart border (1px), tab-bar baseline (2px), unanswered strip box, progress track. Decorative only (1.4:1 on sayfa): never a control boundary, use secenekKenar there.
+  /// İnce çizgi: Kart çerçevesi (1 px), sekme taban çizgisi (2 px), cevaplanmamış şerit kutusu, ilerleme izi. Yalnızca süs (sayfa üzerinde 1,4:1): kontrol sınırı olarak kullanma, orada secenekKenar kullan.
   final Color cizgi;
-  /// Control boundary at rest (1.5px): answer options and the Acilir dropdown. 4.1:1 on sayfa light, 4.8:1 dark: clears 3:1.
+  /// Dururken kontrol sınırı (1,5 px): cevap şıkları ve Acilir. Açıkta sayfa üzerinde 4,1:1, koyuda 4,8:1: 3:1'i geçer.
   final Color secenekKenar;
-  /// Accent (ColorScheme.primary): FilledButton fill, OutlinedButton and TextButton text and 1.5px border, selected option border (2.5px), active tab underline (3px), current strip box ring, progress fill, links, focus. As text, 8.4:1 on sayfa light, 7.0:1 dark.
+  /// Vurgu (ColorScheme.primary): dolu düğme zemini, çerçeveli ve metin düğmesinin yazısı ve 1,5 px çerçevesi, seçili şık çerçevesi (2,5 px), etkin sekme alt çizgisi (3 px), geçerli şerit kutusu, ilerleme dolgusu, bağlantılar, odak. Metin olarak açıkta sayfa üzerinde 8,4:1, koyuda 7,0:1.
   final Color vurgu;
-  /// Text and icons on vurgu fills (onPrimary). White in light; deep navy in dark, because the dark accent is light.
+  /// vurgu dolgusu üzerindeki metin ve simgeler (onPrimary). Açıkta beyaz; koyuda lacivert, çünkü koyu temada vurgu açık renktir.
   final Color vurguUstu;
-  /// Marker yellow (secondary): Etiket chips, the 'Koçu' label in the wordmark, the 4px start rule beside an explanation. Same value in both themes. Never text on a light ground (1.4:1 on kagit).
+  /// İşaret sarısı (secondary): Etiket'ler, logo yazısındaki 'Koçu' etiketi, açıklamanın yanındaki 4 px başlangıç çizgisi. İki temada aynı. Açık zeminde asla metin olarak kullanma (kagit üzerinde 1,4:1).
   final Color isaret;
-  /// Text on isaret (10.3:1).
+  /// isaret üzerindeki metin (10,3:1).
   final Color isaretUstu;
-  /// Correct: right-answer border and check_circle icon, 'Doğru.' feedback text, verified icons, correct strip boxes. 4.7:1 on dogruZemin light. dogru and yanlis differ by hue only (1.2:1), so pair them with an icon, a word, or a lightness difference (the result strip fills wrong boxes solid yanlis against light dogruZemin).
+  /// Doğru: doğru şıkkın çerçevesi ve check_circle simgesi, 'Doğru.' geri bildirimi, verified simgeleri, doğru şerit kutuları. Açıkta dogruZemin üzerinde 4,7:1. dogru ve yanlis yalnızca renk tonuyla ayrılır (aralarında 1,2:1); yanına simge, kelime ya da açıklık farkı ekle.
   final Color dogru;
-  /// Tint behind a correct option or correct strip box.
+  /// Doğru şıkkın ya da doğru şerit kutusunun arkasındaki açık ton; 'Geçtin' etiketinin zemini.
   final Color dogruZemin;
-  /// Wrong (ColorScheme.error): wrong-answer border and cancel icon, 'Yanlış.' feedback text, failed-result card border, and the solid fill of a wrong or blank box in the result strip (number in sayfa, 6.5:1 light, 8.0:1 dark). 5.5:1 on yanlisZemin light, 7.0:1 dark.
+  /// Yanlış (ColorScheme.error): yanlış şıkkın çerçevesi ve cancel simgesi, 'Yanlış.' geri bildirimi, kalınan sınavın teklif kartı çerçevesi, sonuç şeridinde yanlış ya da boş kutunun dolu zemini (numara sayfa renginde, açıkta 6,5:1, koyuda 8,0:1). Açıkta yanlisZemin üzerinde 5,5:1, koyuda 7,0:1.
   final Color yanlis;
-  /// Tint behind a wrong option, wrong strip box, or the result card after a failed mock test.
+  /// Yanlış şıkkın arkasındaki açık ton, kalınan sınavdan sonraki teklif kartı ve 'Bu sefer olmadı' etiketinin zemini.
   final Color yanlisZemin;
 
   const Renk({
