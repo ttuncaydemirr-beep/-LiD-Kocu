@@ -25,13 +25,13 @@ class Renk {
   final Color isaret;
   /// isaret üzerindeki metin (10,3:1).
   final Color isaretUstu;
-  /// Doğru: doğru şıkkın çerçevesi ve check_circle simgesi, 'Doğru.' geri bildirimi, verified simgeleri, doğru şerit kutuları. Açıkta dogruZemin üzerinde 4,7:1. dogru ve yanlis yalnızca renk tonuyla ayrılır (aralarında 1,2:1); yanına simge, kelime ya da açıklık farkı ekle.
+  /// Doğru: doğru şıkkın çerçevesi ve check_circle simgesi, 'Doğru.' geri bildirimi, verified simgeleri, doğru şerit kutuları. Açıkta dogruZemin üzerinde 4,7:1. dogru ve yanlis yalnızca renk tonuyla ayrılır (aralarında 1,2:1); yanına simge, kelime ya da açıklık farkı ekle. Renk körü temalarında mavi (#0066a8 / #7cc4f5): yanlış turuncusundan döteranopi ve protanopide de açıkça ayrılır.
   final Color dogru;
-  /// Doğru şıkkın ya da doğru şerit kutusunun arkasındaki açık ton; 'Geçtin' etiketinin zemini.
+  /// Doğru şıkkın ya da doğru şerit kutusunun arkasındaki açık ton; 'Geçtin' etiketinin zemini. Renk körü temalarında açık mavi ton.
   final Color dogruZemin;
-  /// Yanlış (ColorScheme.error): yanlış şıkkın çerçevesi ve cancel simgesi, 'Yanlış.' geri bildirimi, kalınan sınavın teklif kartı çerçevesi, sonuç şeridinde yanlış ya da boş kutunun dolu zemini (numara sayfa renginde, açıkta 6,5:1, koyuda 8,0:1). Açıkta yanlisZemin üzerinde 5,5:1, koyuda 7,0:1.
+  /// Yanlış (ColorScheme.error): yanlış şıkkın çerçevesi ve cancel simgesi, 'Yanlış.' geri bildirimi, kalınan sınavın teklif kartı çerçevesi, sonuç şeridinde yanlış ya da boş kutunun dolu zemini (numara sayfa renginde, açıkta 6,5:1, koyuda 8,0:1). Açıkta yanlisZemin üzerinde 5,5:1, koyuda 7,0:1. Renk körü temalarında turuncu (#a64400 / #ffae5e).
   final Color yanlis;
-  /// Yanlış şıkkın arkasındaki açık ton, kalınan sınavdan sonraki teklif kartı ve 'Bu sefer olmadı' etiketinin zemini.
+  /// Yanlış şıkkın arkasındaki açık ton, kalınan sınavdan sonraki teklif kartı ve 'Bu sefer olmadı' etiketinin zemini. Renk körü temalarında açık turuncu ton.
   final Color yanlisZemin;
 
   const Renk({
