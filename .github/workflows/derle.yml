@@ -191,7 +191,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/checkout@v5
         with:
-          ref: c77dfbe
+          ref: c77dfbe038660fef02f2d212fd3014959d716e6a
           path: eski
       - uses: actions/setup-java@v5
         with:
