@@ -180,3 +180,44 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash .github/scripts/acilis-testi.sh flutter/lid_kocu/build/app/outputs/flutter-apk/app-release.apk com.lidkocu.app
+
+  # GEÇİCİ (teşhis): 1.1.0 commit'i c77dfbe aynı açılış testiyle.
+  acilis-eski:
+    name: Emülatörde açılış — c77dfbe (geçici)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          ref: c77dfbe
+          path: eski
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - name: Release APK (c77dfbe)
+        working-directory: eski/flutter/lid_kocu
+        run: |
+          flutter pub get
+          flutter build apk --release --target-platform android-x64
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emülatörde aç
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash .github/scripts/acilis-testi.sh eski/flutter/lid_kocu/build/app/outputs/flutter-apk/app-release.apk com.lidkocu.app
