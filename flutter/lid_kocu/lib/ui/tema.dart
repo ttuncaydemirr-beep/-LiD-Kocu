@@ -85,7 +85,10 @@ ThemeData temaOlustur(Brightness b) {
   return base.copyWith(
     scaffoldBackgroundColor: r.kagit,
     canvasColor: r.sayfa,
-    textTheme: base.textTheme.apply(bodyColor: r.yazi, displayColor: r.yazi, fontFamily: _yaziAilesi),
+    // Gövde metni: Material varsayılanı 14 px yerine 16 px / 1.5 (Almanca ve uzun açıklamalar için okunurluk).
+    textTheme: base.textTheme
+        .apply(bodyColor: r.yazi, displayColor: r.yazi, fontFamily: _yaziAilesi)
+        .copyWith(bodyMedium: base.textTheme.bodyMedium?.copyWith(fontSize: 16, height: 1.5)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, 48),
@@ -213,7 +216,8 @@ class Acilir<T> extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: r.sayfa,
-          border: Border.all(color: r.cizgi, width: 1.5),
+          // Kontrol sınırı en az 3:1 olmalı: cizgi (1,4:1) yerine secenekKenar (4,1:1 / 4,8:1).
+          border: Border.all(color: r.secenekKenar, width: 1.5),
           borderRadius: BorderRadius.circular(6),
         ),
         child: DropdownButtonHideUnderline(

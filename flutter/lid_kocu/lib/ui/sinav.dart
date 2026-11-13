@@ -446,28 +446,44 @@ class NumaraSeridi extends StatelessWidget {
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
         children: [
-          for (var i = 0; i < x.sorular.length; i++)
-            _Kutu(
-              key: ValueKey('kutu-$i'),
-              no: i + 1,
-              simdi: i == x.sira,
-              zemin: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogruZemin : r.yanlisZemin)
-                  : (x.cevaplar[i] != null ? r.yazi : Colors.transparent),
-              yazi: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogru : r.yanlis)
-                  : (x.cevaplar[i] != null ? r.kagit : r.soluk),
-              kenar: x.bitti
-                  ? (x.cevaplar[i] == x.sorular[i].dogru ? r.dogru : r.yanlis)
-                  : (x.cevaplar[i] != null ? r.yazi : r.cizgi),
-              vurgu: r.vurgu,
-              onTap: () {
-                s.sinavGit(i);
-                ustuneKaydir(context);
-              },
-            ),
+          for (var i = 0; i < x.sorular.length; i++) _kutu(context, s, r, x, i),
         ],
       ),
+    );
+  }
+
+  /// Sonuçta yanlış/boş kutu dolu `yanlis` zeminle çizilir: doğru kutudan renk tonunun yanında
+  /// açıklık farkıyla da ayrılır (renk körlüğü). Ekran okuyucu numarayla birlikte sonucu okur.
+  Widget _kutu(BuildContext context, AppState s, Renk r, Sinav x, int i) {
+    final no = i + 1;
+    final cevap = x.cevaplar[i];
+    final Color zemin, yazi, kenar;
+    final String etiket;
+    if (x.bitti) {
+      final dogru = cevap == x.sorular[i].dogru;
+      zemin = dogru ? r.dogruZemin : r.yanlis;
+      yazi = dogru ? r.dogru : r.sayfa;
+      kenar = dogru ? r.dogru : r.yanlis;
+      etiket = s.t(dogru ? 'boxRight' : (cevap == null ? 'boxEmpty' : 'boxWrong'), {'n': no});
+    } else {
+      zemin = cevap != null ? r.yazi : Colors.transparent;
+      yazi = cevap != null ? r.kagit : r.soluk;
+      kenar = cevap != null ? r.yazi : r.cizgi;
+      etiket = s.t(cevap != null ? 'boxAnswered' : 'boxEmpty', {'n': no});
+    }
+    return _Kutu(
+      key: ValueKey('kutu-$i'),
+      no: no,
+      etiket: etiket,
+      simdi: i == x.sira,
+      zemin: zemin,
+      yazi: yazi,
+      kenar: kenar,
+      vurgu: r.vurgu,
+      onTap: () {
+        s.sinavGit(i);
+        ustuneKaydir(context);
+      },
     );
   }
 }
@@ -476,6 +492,7 @@ class _Kutu extends StatelessWidget {
   const _Kutu({
     super.key,
     required this.no,
+    required this.etiket,
     required this.simdi,
     required this.zemin,
     required this.yazi,
@@ -485,6 +502,7 @@ class _Kutu extends StatelessWidget {
   });
 
   final int no;
+  final String etiket;
   final bool simdi;
   final Color zemin, yazi, kenar, vurgu;
   final VoidCallback onTap;
@@ -493,7 +511,7 @@ class _Kutu extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         button: true,
         selected: simdi,
-        label: '$no',
+        label: etiket,
         excludeSemantics: true,
         onTap: onTap,
         child: Material(

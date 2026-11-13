@@ -134,6 +134,35 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const ValueKey('sonuc')), findsOneWidget);
     expect(s.sinavSayisi, 1);
+
+    // Sonuç şeridi: boş kutu ekran okuyucuya numarasıyla birlikte "boş" diye okunur.
+    final etiket = t.getSemantics(find.byKey(const ValueKey('kutu-0'))).label;
+    expect(etiket, s.t('boxEmpty', {'n': 1}));
+  });
+
+  testWidgets('sonuc seridi: dogru ve yanlis kutular etiketle ayrilir', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    s.dilSec('tr');
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('sekme-sinav')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('basla')));
+    await t.pumpAndSettle();
+    for (var i = 0; i < 33; i++) {
+      await t.tap(find.byKey(const ValueKey('secenek-0')));
+      await t.pump();
+    }
+    await t.tap(find.byKey(const ValueKey('bitir')));
+    await t.pumpAndSettle();
+
+    final x = s.sinav!;
+    for (var i = 0; i < 33; i++) {
+      final dogru = x.cevaplar[i] == x.sorular[i].dogru;
+      final etiket = t.getSemantics(find.byKey(ValueKey('kutu-$i'))).label;
+      expect(etiket, s.t(dogru ? 'boxRight' : 'boxWrong', {'n': i + 1}));
+    }
   });
 
   testWidgets('ana sayfadan sinava basla devam eden sinavi silmez', (t) async {
