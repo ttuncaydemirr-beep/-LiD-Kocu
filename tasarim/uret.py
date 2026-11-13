@@ -1,5 +1,5 @@
 """Klarheit renklerini tek kaynaktan (tasarim/tokens.json) üretir:
-- flutter/lid_kocu/lib/ui/renk.dart          (Renk sınıfı, açık ve koyu tema)
+- flutter/lid_kocu/lib/ui/renk.dart          (Renk sınıfı: açık, koyu ve iki renk körü teması)
 - web/src/index.html                         (/*RENKLER*/ ... /*RENKLER SONU*/ arası)
 - android res/values{,-night}/colors.xml     (açılış zemini = kagit)
 Renk değiştirmek için yalnızca tokens.json düzenlenir, sonra: python3 web/tools/derle.py"""
@@ -34,13 +34,17 @@ def dart_tema(tema):
 
 
 alanlar = "\n".join(f"  /// {r['usage']}\n  final Color {r['name']};" for r in renkler)
+kopya_param = ", ".join(f"Color? {a}" for a in adlar)
+kopya_govde = "\n".join(f"      {a}: {a} ?? this.{a}," for a in adlar)
+gecis_govde = "\n".join(f"      {a}: Color.lerp({a}, other.{a}, t)!," for a in adlar)
 dart = f"""// ÜRETİLDİ: tasarim/tokens.json -> tasarim/uret.py (python3 web/tools/derle.py). Elle değiştirme.
 // Renk belirteçleri ("Klarheit" görsel kimliği). Metin/zemin çiftleri WCAG AA (4.5:1),
 // şık çerçevesi ve vurgu çizgileri en az 3:1 sağlar.
 import 'package:flutter/material.dart';
 
+/// Temaya eklenen renk paleti (ThemeExtension). Okumak için: `Renk.of(context)`.
 @immutable
-class Renk {{
+class Renk extends ThemeExtension<Renk> {{
 {alanlar}
 
   const Renk({{
@@ -55,7 +59,40 @@ class Renk {{
 {dart_tema("dark")}
   );
 
-  static Renk of(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? koyu : acik;
+  /// Renk körü modu, açık tema: doğru mavi, yanlış turuncu; diğer renkler `acik` ile aynı.
+  static const Renk renkKoruAcik = Renk(
+{dart_tema("cvd-light")}
+  );
+
+  /// Renk körü modu, koyu tema: doğru mavi, yanlış turuncu; diğer renkler `koyu` ile aynı.
+  static const Renk renkKoruKoyu = Renk(
+{dart_tema("cvd-dark")}
+  );
+
+  /// Parlaklık ve renk körü ayarına göre palet.
+  static Renk sec(Brightness b, {{bool renkKoru = false}}) => b == Brightness.dark
+      ? (renkKoru ? renkKoruKoyu : koyu)
+      : (renkKoru ? renkKoruAcik : acik);
+
+  static Renk of(BuildContext context) {{
+    final t = Theme.of(context);
+    return t.extension<Renk>() ?? sec(t.brightness);
+  }}
+
+  @override
+  Renk copyWith({{{kopya_param}}}) {{
+    return Renk(
+{kopya_govde}
+    );
+  }}
+
+  @override
+  Renk lerp(Renk? other, double t) {{
+    if (other == null) return this;
+    return Renk(
+{gecis_govde}
+    );
+  }}
 }}
 """
 (kok / "flutter/lid_kocu/lib/ui/renk.dart").write_text(dart, encoding="utf-8")

@@ -3,8 +3,9 @@
 // şık çerçevesi ve vurgu çizgileri en az 3:1 sağlar.
 import 'package:flutter/material.dart';
 
+/// Temaya eklenen renk paleti (ThemeExtension). Okumak için: `Renk.of(context)`.
 @immutable
-class Renk {
+class Renk extends ThemeExtension<Renk> {
   /// Kâğıt: her ekranın arkasındaki zemin ve kart içindeki görsel açıklamasının iç zemini. Dolu `yazi` üzerindeki metin rengi de budur (seçili dil tuşu, cevaplanmış şerit kutusu).
   final Color kagit;
   /// Sayfa: Kart, Acilir, şık yüzeyleri, diyaloglar. Ayrıca onError ve sonuç şeridinde dolu `yanlis` kutudaki numara.
@@ -85,5 +86,90 @@ class Renk {
     yanlisZemin: Color(0xFF47201D),
   );
 
-  static Renk of(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? koyu : acik;
+  /// Renk körü modu, açık tema: doğru mavi, yanlış turuncu; diğer renkler `acik` ile aynı.
+  static const Renk renkKoruAcik = Renk(
+    kagit: Color(0xFFF3F6FB),
+    sayfa: Color(0xFFFFFFFF),
+    yazi: Color(0xFF14233B),
+    soluk: Color(0xFF566479),
+    cizgi: Color(0xFFD3DBE6),
+    secenekKenar: Color(0xFF6E7F9B),
+    vurgu: Color(0xFF1A47A8),
+    vurguUstu: Color(0xFFFFFFFF),
+    isaret: Color(0xFFFFC83D),
+    isaretUstu: Color(0xFF2A2100),
+    dogru: Color(0xFF0066A8),
+    dogruZemin: Color(0xFFE1EEFA),
+    yanlis: Color(0xFFA64400),
+    yanlisZemin: Color(0xFFFDE9D6),
+  );
+
+  /// Renk körü modu, koyu tema: doğru mavi, yanlış turuncu; diğer renkler `koyu` ile aynı.
+  static const Renk renkKoruKoyu = Renk(
+    kagit: Color(0xFF0F1726),
+    sayfa: Color(0xFF182235),
+    yazi: Color(0xFFE9EEF6),
+    soluk: Color(0xFFA3B0C4),
+    cizgi: Color(0xFF2E3B52),
+    secenekKenar: Color(0xFF7D8EAB),
+    vurgu: Color(0xFF8AABF0),
+    vurguUstu: Color(0xFF0B1630),
+    isaret: Color(0xFFFFC83D),
+    isaretUstu: Color(0xFF2A2100),
+    dogru: Color(0xFF7CC4F5),
+    dogruZemin: Color(0xFF0F2C45),
+    yanlis: Color(0xFFFFAE5E),
+    yanlisZemin: Color(0xFF4A2A0E),
+  );
+
+  /// Parlaklık ve renk körü ayarına göre palet.
+  static Renk sec(Brightness b, {bool renkKoru = false}) => b == Brightness.dark
+      ? (renkKoru ? renkKoruKoyu : koyu)
+      : (renkKoru ? renkKoruAcik : acik);
+
+  static Renk of(BuildContext context) {
+    final t = Theme.of(context);
+    return t.extension<Renk>() ?? sec(t.brightness);
+  }
+
+  @override
+  Renk copyWith({Color? kagit, Color? sayfa, Color? yazi, Color? soluk, Color? cizgi, Color? secenekKenar, Color? vurgu, Color? vurguUstu, Color? isaret, Color? isaretUstu, Color? dogru, Color? dogruZemin, Color? yanlis, Color? yanlisZemin}) {
+    return Renk(
+      kagit: kagit ?? this.kagit,
+      sayfa: sayfa ?? this.sayfa,
+      yazi: yazi ?? this.yazi,
+      soluk: soluk ?? this.soluk,
+      cizgi: cizgi ?? this.cizgi,
+      secenekKenar: secenekKenar ?? this.secenekKenar,
+      vurgu: vurgu ?? this.vurgu,
+      vurguUstu: vurguUstu ?? this.vurguUstu,
+      isaret: isaret ?? this.isaret,
+      isaretUstu: isaretUstu ?? this.isaretUstu,
+      dogru: dogru ?? this.dogru,
+      dogruZemin: dogruZemin ?? this.dogruZemin,
+      yanlis: yanlis ?? this.yanlis,
+      yanlisZemin: yanlisZemin ?? this.yanlisZemin,
+    );
+  }
+
+  @override
+  Renk lerp(Renk? other, double t) {
+    if (other == null) return this;
+    return Renk(
+      kagit: Color.lerp(kagit, other.kagit, t)!,
+      sayfa: Color.lerp(sayfa, other.sayfa, t)!,
+      yazi: Color.lerp(yazi, other.yazi, t)!,
+      soluk: Color.lerp(soluk, other.soluk, t)!,
+      cizgi: Color.lerp(cizgi, other.cizgi, t)!,
+      secenekKenar: Color.lerp(secenekKenar, other.secenekKenar, t)!,
+      vurgu: Color.lerp(vurgu, other.vurgu, t)!,
+      vurguUstu: Color.lerp(vurguUstu, other.vurguUstu, t)!,
+      isaret: Color.lerp(isaret, other.isaret, t)!,
+      isaretUstu: Color.lerp(isaretUstu, other.isaretUstu, t)!,
+      dogru: Color.lerp(dogru, other.dogru, t)!,
+      dogruZemin: Color.lerp(dogruZemin, other.dogruZemin, t)!,
+      yanlis: Color.lerp(yanlis, other.yanlis, t)!,
+      yanlisZemin: Color.lerp(yanlisZemin, other.yanlisZemin, t)!,
+    );
+  }
 }

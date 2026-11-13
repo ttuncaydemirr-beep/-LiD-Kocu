@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lid_kocu/core/veri.dart';
 import 'package:lid_kocu/state.dart';
 import 'package:lid_kocu/ui/app.dart';
+import 'package:lid_kocu/ui/tema.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<AppState> _kur(WidgetTester t, [Map<String, Object> ilk = const {'kurulum': true}]) async {
@@ -162,6 +163,44 @@ void main() {
       final dogru = x.cevaplar[i] == x.sorular[i].dogru;
       final etiket = t.getSemantics(find.byKey(ValueKey('kutu-$i'))).label;
       expect(etiket, s.t(dogru ? 'boxRight' : 'boxWrong', {'n': i + 1}));
+    }
+  });
+
+  testWidgets('renk koru modu: alt bilgideki dugme paleti degistirir ve kaydedilir', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    s.dilSec('tr');
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+
+    Renk palet() => Renk.of(t.element(find.byType(Kabuk)));
+    expect(s.renkKoru, isFalse);
+    expect(palet().dogru, Renk.acik.dogru);
+
+    final dugme = find.byKey(const ValueKey('renk-koru'));
+    await t.ensureVisible(dugme);
+    await t.tap(dugme);
+    await t.pumpAndSettle();
+    expect(s.renkKoru, isTrue);
+    expect(palet().dogru, Renk.renkKoruAcik.dogru);
+    expect(palet().yanlis, Renk.renkKoruAcik.yanlis);
+    expect(palet().vurgu, Renk.acik.vurgu); // durum renkleri dışında palet aynı
+
+    // Uygulama yeniden açılınca ayar hatırlanır.
+    final p = await t.runAsync(() => SharedPreferences.getInstance());
+    expect(p!.getBool('renkKoru'), isTrue);
+    final s2 = await _kur(t, {'kurulum': true, 'renkKoru': true});
+    expect(s2.renkKoru, isTrue);
+  });
+
+  test('renk koru paletleri yalnizca dort durum rengini degistirir', () {
+    for (final (marka, rk) in [(Renk.acik, Renk.renkKoruAcik), (Renk.koyu, Renk.renkKoruKoyu)]) {
+      expect(rk.lerp(marka, 1).dogru, marka.dogru);
+      expect(rk.copyWith(dogru: marka.dogru).dogru, marka.dogru);
+      expect([rk.kagit, rk.sayfa, rk.yazi, rk.soluk, rk.cizgi, rk.secenekKenar, rk.vurgu, rk.isaret],
+          [marka.kagit, marka.sayfa, marka.yazi, marka.soluk, marka.cizgi, marka.secenekKenar, marka.vurgu, marka.isaret]);
+      expect(rk.dogru, isNot(marka.dogru));
+      expect(rk.yanlis, isNot(marka.yanlis));
     }
   });
 

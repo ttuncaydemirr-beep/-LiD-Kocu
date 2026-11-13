@@ -38,6 +38,16 @@ class AltBilgi extends StatelessWidget {
               metin: s.t('privacyOptions'),
               onTap: s.reklam.gizlilikSecenekleri,
             ),
+          MergeSemantics(
+            child: SwitchListTile(
+              key: const ValueKey('renk-koru'),
+              contentPadding: EdgeInsets.zero,
+              value: s.renkKoru,
+              onChanged: s.renkKoruSec,
+              title: Text(s.t('cvdMode'), style: Yazi.altBilgi.copyWith(color: r.yazi, fontWeight: FontWeight.w700)),
+              subtitle: Text(s.t('cvdHint'), style: stil),
+            ),
+          ),
           Text(s.t('ver', {'d': s.katalog.surum}), style: stil),
           SelectableText(s.t('sup', {'m': destekEposta}), style: stil),
         ],

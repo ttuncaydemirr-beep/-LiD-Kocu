@@ -207,6 +207,7 @@ class AppState extends ChangeNotifier {
     if (f == filtreYanlis) st.calisFiltre = filtreYanlis;
     st._ucretsizAcilan.addAll(p?.getStringList('ucretsizAcilan') ?? const <String>[]);
     st._yanlisZiyaret = p?.getBool('yanlisZiyaret') ?? false;
+    st.renkKoru = p?.getBool('renkKoru') ?? false;
     st._sinav = oku<Sinav?>('sinavDevam', (j) => Sinav.fromJson(j as Map<String, dynamic>, (id) => indeks[id]));
     st._sureKontrol(bildir: false); // kapalıyken süresi dolan sınav burada biter
     // Play bağlantısı, Firebase ve reklam rızası ilk ekranı bekletmez. Premium'da reklam tarafı hiç başlamaz.
@@ -342,6 +343,15 @@ class AppState extends ChangeNotifier {
   }
 
   // ---- ayarlar
+  /// Renk körü modu: doğru/yanlış mavi/turuncu gösterilir (tema: Renk.renkKoruAcik/Koyu).
+  bool renkKoru = false;
+
+  void renkKoruSec(bool v) {
+    renkKoru = v;
+    _p?.setBool('renkKoru', v);
+    _bildir();
+  }
+
   void dilSec(String d) {
     if (!diller.contains(d)) return;
     dil = d;

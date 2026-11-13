@@ -37,8 +37,8 @@ class _Kok extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: temaOlustur(Brightness.light),
-      darkTheme: temaOlustur(Brightness.dark),
+      theme: temaOlustur(Brightness.light, renkKoru: s.renkKoru),
+      darkTheme: temaOlustur(Brightness.dark, renkKoru: s.renkKoru),
       themeMode: ThemeMode.system,
       home: const Kabuk(),
     );

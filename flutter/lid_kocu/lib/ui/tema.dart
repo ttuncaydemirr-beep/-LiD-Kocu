@@ -59,8 +59,9 @@ abstract final class Yazi {
 /// Uygulamaya paketlenmiş tek yazı ailesi (Latin + Arapça), assets/fonts/ içinde.
 const String _yaziAilesi = 'Cairo';
 
-ThemeData temaOlustur(Brightness b) {
-  final r = b == Brightness.dark ? Renk.koyu : Renk.acik;
+/// [renkKoru]: doğru/yanlış renkleri mavi/turuncu olan renk körü paleti.
+ThemeData temaOlustur(Brightness b, {bool renkKoru = false}) {
+  final r = Renk.sec(b, renkKoru: renkKoru);
   final cs = ColorScheme(
     brightness: b,
     primary: r.vurgu,
@@ -78,6 +79,7 @@ ThemeData temaOlustur(Brightness b) {
   const dolgu = EdgeInsets.symmetric(horizontal: Bosluk.b16, vertical: Bosluk.b12);
   final base = ThemeData(useMaterial3: true, colorScheme: cs, fontFamily: _yaziAilesi);
   return base.copyWith(
+    extensions: [r],
     scaffoldBackgroundColor: r.kagit,
     canvasColor: r.sayfa,
     // Gövde metni: Material varsayılanı 14 px yerine 16 px / 1.5 (Almanca ve uzun açıklamalar için okunurluk).
