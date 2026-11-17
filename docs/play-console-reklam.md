@@ -5,7 +5,7 @@ Hazırlanma tarihi: 13 Kasım 2026. Bu rehber, 1.1.0 sürümünü (AdMob reklaml
 **Önemli uyarılar**
 - Play Console ekran adları zamanla ve dile göre değişir. Aşağıdaki Türkçe adlar tahmindir; emin olmadığım yerlerde "ekranda şuna benzer" yazdım. Ekrandaki adı esas al.
 - Veri türü eşleştirmeleri (AdMob/Firebase verisi -> Play'deki kategori adı) Google'ın resmî sayfalarındaki veri listesine dayanır, ama kategori adlarına eşleştirme **benim yorumumdur**. Google AdMob sayfası bu eşleştirmeyi kendisi yapmadığını ve formdan geliştiricinin sorumlu olduğunu yazıyor. Yayından önce aşağıdaki kaynaklarla bir kez daha karşılaştır.
-- Beyanlar, gizlilik politikasıyla (`docs/gizlilik.html`) uyumlu olmalı. Gizlilik sayfası, bu dal ana dala (main) birleşene kadar canlı değildir; formları göndermeden önce sayfanın yeni halinin yayında olduğunu kontrol et: https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html
+- Beyanlar, gizlilik politikasıyla (`docs/gizlilik.html`) uyumlu olmalı. Gizlilik sayfası, bu dal ana dala (main) birleşene kadar canlı değildir; formları göndermeden önce sayfanın yeni halinin yayında olduğunu kontrol et: https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/
 - Bu formları, 1.1.0 sürümünü yüklemeden önce ya da yüklerken doldur. Beyan ile uygulamanın gerçek davranışı uyuşmazsa sürüm reddedilebilir.
 
 ## Kaynaklar (Google'ın resmî sayfaları)
@@ -70,7 +70,7 @@ Aşağıdaki tablo Google'ın AdMob ve Google Analytics sayfalarındaki veri lis
 
 ### 3.4 Gizlilik politikası bağlantısı
 Veri güvenliği formunun sonunda (ya da Mağaza ayarları > Gizlilik politikası) şu adres yazılı olmalı:
-`https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html`
+`https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/`
 
 ## 4. Mağaza metni
 - Tam açıklama ve uygulama içi ürün açıklamaları için `docs/magaza-kaydi.md` içindeki güncel metinleri 4 dile yapıştır (reklam ve "Premium reklamsız" ifadeleri eklendi).

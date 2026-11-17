@@ -81,7 +81,7 @@ Wichtig:
 LiD Koçu ist eine Lernhilfe. Für Anmeldung und Testtermin wende dich bitte an die zuständige Stelle.
 
 Kontakt: nilkaren.tuncay.demir@gmail.com
-Datenschutz: https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html
+Datenschutz: https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/
 ```
 
 ## 2. Türkçe (tr-TR)
@@ -145,7 +145,7 @@ Premium (tek ödeme, abonelik yok):
 LiD Koçu bir hazırlık yardımcısıdır. Sınava başvuru ve sınav tarihi için yetkili kuruma başvurmalısın.
 
 İletişim: nilkaren.tuncay.demir@gmail.com
-Gizlilik: https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html
+Gizlilik: https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/
 ```
 
 ## 3. Arapça (ar)
@@ -209,7 +209,7 @@ LiD Koçu: اختبار الجنسية
 LiD Koçu أداة مساعدة للتحضير. للتسجيل في الاختبار وتحديد موعده، تواصل مع الجهة المختصة.
 
 للتواصل: nilkaren.tuncay.demir@gmail.com
-الخصوصية: https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html
+الخصوصية: https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/
 ```
 
 ## 4. İngilizce (en-US)
@@ -273,7 +273,7 @@ Important:
 LiD Koçu is a study aid. For registration and the test date, please contact the responsible authority.
 
 Contact: nilkaren.tuncay.demir@gmail.com
-Privacy: https://ttuncaydemirr-beep.github.io/-LiD-Kocu/gizlilik.html
+Privacy: https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/
 ```
 
 ## 5. Varsayılan mağaza dili
