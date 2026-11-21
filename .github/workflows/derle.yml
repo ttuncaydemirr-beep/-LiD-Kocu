@@ -259,7 +259,8 @@ jobs:
           if echo "$ECIKTI" | grep -qi 'Android Debug'; then
             echo "::error title=İmza denetimi::AAB 'Android Debug' anahtarıyla imzalandı; yükleme anahtarı kullanılmadı. Play'e yüklemeyin."; exit 1
           fi
-          echo "İmza denetimi geçti: AAB debug olmayan bir anahtarla imzalı."
+          jarsigner -verify "$AAB" >/dev/null 2>&1 || { echo "::error title=İmza denetimi::jarsigner doğrulaması başarısız (AAB bütünlüğü bozuk)"; exit 1; }
+          echo "İmza denetimi geçti: AAB debug olmayan bir anahtarla imzalı ve bütünlüğü doğrulandı."
 
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: steps.anahtar.outputs.var == 'true'

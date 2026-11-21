@@ -50,6 +50,7 @@ Mağaza metinleri (4 dil): `docs/magaza-kaydi.md`. Gizlilik: `docs/gizlilik.html
 1. Veri kontrolü, `flutter analyze`, `flutter test`
 2. **Deneme APK** → Releases > "Deneme APK". Telefona indirip kurulur (satın alma bu dosyada çalışmaz).
 3. İmza anahtarı ekliyse **Play AAB** → Actions > son çalışma > Artifacts > `lid-kocu-play-aab`
+   (Play AAB yalnızca `main` dalına gönderimde üretilir; elle çalıştırma ve dallar AAB üretmez.)
 
 ### İmza anahtarı
 Settings > Secrets and variables > Actions altına dört gizli değer eklenir:
