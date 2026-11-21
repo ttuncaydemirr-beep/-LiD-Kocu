@@ -69,3 +69,13 @@ Anahtar dosyası (`.jks`) ve şifresi depoya **konmaz**; iki güvenli yerde yede
 Tamamlananlar (12.11.2026): şüpheli 9 sorunun cevabı (73, 98, 173, 184, 297, bremen-9, nordrhein-westfalen-4,
 saarland-4, brandenburg-1) resmî BAMF test merkezinde kontrol edildi, hepsi doğru. Satın alma (promosyon koduyla)
 kapalı test sürümünde gerçek telefonda denendi, Premium açıldı. Mağaza kaydı 4 dilde hazır.
+
+## Sürüm notları
+**1.1.3+6 (güvenlik denetimi düzeltmeleri)**
+- Uygulama içi "Gizlilik politikası" bağlantısı (alt bilgi, 4 dil).
+- Satın alma imzası yerelde doğrulanır (`lib/services/imza_dogrula.dart`, saf Dart, `pointycastle`). Lisans anahtarı
+  `lib/services/billing_ayar.dart` > `playLisansAnahtari` içine yapıştırılır (Play Console > Para kazanma kurulumu > Lisanslama);
+  **boşsa doğrulama atlanır**, davranış eskisi gibidir.
+- CI: action'lar tam commit SHA'sına bağlandı; iş akışı varsayılan salt okunur; imza anahtarı yalnızca main'e push'ta çalışan
+  `imza-aab` işinde; Deneme APK sürümü ayrı işte; AAB imzalayanı `keytool` ile denetlenir ("Android Debug" ise kırmızı).
+- Gizlilik metni: teşhis bilgileri (çökme ve performans) ve Firebase Installations/Remote Config'in rıza ekranından önce çalışabildiği eklendi.

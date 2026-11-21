@@ -12,7 +12,11 @@ class AlimKaydi {
 
   /// Play'e göre gerçekten ödenmiş mi (purchaseState == PURCHASED). Bekleyen ödeme false'tur.
   final bool gercek;
-  const AlimKaydi(this.urun, this.durum, {this.gercek = true});
+
+  /// Play imzası yerelde doğrulandıysa ve tutmuyorsa false (billing_ayar.dart'taki anahtar doluyken).
+  /// Doğrulama atlandıysa (anahtar boş) true kalır: mevcut davranış.
+  final bool imzaGecerli;
+  const AlimKaydi(this.urun, this.durum, {this.gercek = true, this.imzaGecerli = true});
 }
 
 class AlimOzeti {
@@ -36,6 +40,12 @@ AlimOzeti ozetle(List<AlimKaydi> liste, String urunId) {
   var alindi = false, bekliyor = false, iptal = false, hata = false;
   var geri = liste.isEmpty;
   for (final p in liste) {
+    if (!p.imzaGecerli) {
+      // Sahte/bozuk imzalı kayıt: ne hak verir ne bekleyen ödeme sayılır; yalnızca hata.
+      hata = true;
+      if (p.durum == AlimDurumu.geriYuklendi) geri = true;
+      continue;
+    }
     switch (p.durum) {
       case AlimDurumu.iptal:
         iptal = true;

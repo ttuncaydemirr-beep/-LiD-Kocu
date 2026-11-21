@@ -18,6 +18,7 @@ const List<String> diller = ['tr', 'en', 'de', 'ar'];
 const String destekEposta = 'nilkaren.tuncay.demir@gmail.com';
 const String kaynakUrl =
     'https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/Einbuergerung/gesamtfragenkatalog-lebenindeutschland.pdf';
+const String gizlilikUrl = 'https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/';
 const String testMerkeziUrl = 'https://oet.bamf.de/ords/oetut/f?p=514:1:0';
 
 /// Çalış sekmesi süzgeçleri.

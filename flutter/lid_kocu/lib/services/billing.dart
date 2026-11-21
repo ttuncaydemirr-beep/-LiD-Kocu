@@ -4,7 +4,7 @@
 //  - PURCHASED → hak verilir ve onaylanır (3 gün içinde onaylanmayan satın alma iade edilir). Onay sonucu
 //    (BillingResultWrapper.responseCode) kontrol edilir; başarısızsa birkaç kez, sonra her ön plana dönüşte yeniden denenir.
 //  - PENDING → hak verilmez; "ödeme bekleniyor" denir.
-//  - Kararlar eklentiden bağımsız: billing_karar.dart. Sunucu doğrulaması yoktur (sunucusuz uygulama).
+//  - Kararlar eklentiden bağımsız: billing_karar.dart. Sunucu doğrulaması yoktur (sunucusuz uygulama); billing_ayar.dart'taki lisans anahtarı doluysa imza yerelde doğrulanır.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -13,7 +13,9 @@ import 'package:in_app_purchase_android/billing_client_wrappers.dart'
     show BillingResponse, BillingResultWrapper, PurchaseStateWrapper;
 import 'package:in_app_purchase_android/in_app_purchase_android.dart' show GooglePlayPurchaseDetails;
 
+import 'billing_ayar.dart';
 import 'billing_karar.dart';
+import 'imza_dogrula.dart';
 
 export 'billing_karar.dart' show SatinAlmaSonucu;
 
@@ -208,6 +210,19 @@ class Billing {
     return p.status == PurchaseStatus.purchased || p.status == PurchaseStatus.restored;
   }
 
+  /// Anahtar doluysa PURCHASED/restored Google Play kaydının imzası yerelde doğrulanır (imza_dogrula.dart).
+  /// Anahtar boşsa veya Google Play kaydı değilse true: mevcut davranış.
+  bool _imzaGecerli(PurchaseDetails p, bool gercek) {
+    if (playLisansAnahtari.isEmpty || !gercek || p is! GooglePlayPurchaseDetails) return true;
+    final sonuc = satinAlmaImzasiniDogrula(
+      lisansAnahtari: playLisansAnahtari,
+      imzaliVeri: p.billingClientPurchase.originalJson,
+      imza: p.billingClientPurchase.signature,
+    );
+    if (sonuc == ImzaSonucu.gecersiz && kDebugMode) debugPrint('Satın alma imzası geçersiz: ${p.productID}');
+    return sonuc != ImzaSonucu.gecersiz;
+  }
+
   static AlimDurumu _durum(PurchaseStatus s) => switch (s) {
         PurchaseStatus.pending => AlimDurumu.bekliyor,
         PurchaseStatus.purchased => AlimDurumu.alindi,
@@ -248,9 +263,10 @@ class Billing {
     final kayitlar = <AlimKaydi>[];
     for (final p in liste) {
       final gercek = _gercek(p);
-      kayitlar.add(AlimKaydi(p.productID, _durum(p.status), gercek: gercek));
       final odendi = p.status == PurchaseStatus.purchased || p.status == PurchaseStatus.restored;
-      if (odendi && gercek && p.pendingCompletePurchase) unawaited(_onayla(p));
+      final imza = odendi ? _imzaGecerli(p, gercek) : true;
+      kayitlar.add(AlimKaydi(p.productID, _durum(p.status), gercek: gercek, imzaGecerli: imza));
+      if (odendi && gercek && imza && p.pendingCompletePurchase) unawaited(_onayla(p));
     }
     final o = ozetle(kayitlar, premiumUrunId);
 

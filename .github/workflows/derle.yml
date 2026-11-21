@@ -5,10 +5,14 @@
 #   KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
 # Firebase (isteğe bağlı): GOOGLE_SERVICES_JSON = google-services.json dosyasının içeriği (düz metin veya base64).
 #   Yoksa uygulama Firebase'siz derlenir (Analytics/Remote Config sessizce kapalı).
+#
+# Güvenlik düzeni: iş akışı varsayılan olarak salt okunur. İmza anahtarı yalnızca "imza-aab" işinde (yalnızca main'e push) kullanılır;
+# test/emülatör işleri anahtara hiç erişmez. Deneme APK sürümünü yalnızca "deneme-apk-yayin" işi (contents: write) günceller.
+# Üçüncü taraf action'lar tam commit SHA'sına bağlıdır; güncellerken etiketi ve SHA'yı birlikte değiştirin.
 name: Derle
 
 permissions:
-  contents: write
+  contents: read
 
 on:
   push:
@@ -21,7 +25,9 @@ jobs:
     name: Veri ve web önizleme
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Flutter varlıkları web verisiyle aynı mı
         run: |
           python3 web/tools/derle.py
@@ -37,12 +43,14 @@ jobs:
       run:
         working-directory: flutter/lid_kocu
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 17
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           # Sabit sürüm: in_app_purchase_android 0.5.x (Billing Library 8+) bu sürümle çözülür.
@@ -85,17 +93,69 @@ jobs:
           flutter build apk --release --dart-define=TEST_REKLAM=true 2>&1 | tee apk.log || { tail -25 apk.log | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=APK derlemesi::/'; echo; exit 1; }
           cp build/app/outputs/flutter-apk/app-release.apk LiD-Kocu-deneme.apk
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: lid-kocu-deneme-apk
           path: flutter/lid_kocu/LiD-Kocu-deneme.apk
           retention-days: 14
 
-      - name: Deneme APK sürümünü güncelle
-        # Yalnızca main: başka dallardaki denemeler Releases'teki APK'yı değiştirmez (APK yine Artifacts'ta).
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
+  # Açılış duman testi: Play derlemesiyle aynı ayarlarla (release, R8/minify açık, gerçek AdMob kimliği,
+  # google-services.json) APK derlenir ve Android 14 emülatöründe açılır. 15 sn içinde çökerse iş kırmızı olur.
+  acilis:
+    name: Emülatörde açılış (API 34)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - name: Release APK (Play AAB ile aynı ayarlar, x86_64)
+        working-directory: flutter/lid_kocu
+        run: |
+          flutter pub get
+          flutter build apk --release --target-platform android-x64
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emülatörde aç
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash .github/scripts/acilis-testi.sh flutter/lid_kocu/build/app/outputs/flutter-apk/app-release.apk com.lidkocu.app
+
+
+  # Deneme APK sürümü: yalnızca main'den güncellenir (başka dallardaki denemeler Releases'teki APK'yı değiştirmez; APK yine Artifacts'ta).
+  # contents: write yalnızca bu işte. Depo kodu çalıştırılmaz, imza anahtarı yok.
+  deneme-apk-yayin:
+    name: Deneme APK sürümünü güncelle
+    needs: [veri, flutter]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: lid-kocu-deneme-apk
+      - name: Releases > Deneme APK
         run: |
           NOTES="Telefonda denemek için otomatik derlenen APK (commit ${GITHUB_SHA::7}). Play Store'a yüklenmez; satın alma bu dosyada çalışmaz."
           if gh release view deneme-apk >/dev/null 2>&1; then
@@ -104,6 +164,52 @@ jobs:
           else
             gh release create deneme-apk LiD-Kocu-deneme.apk --title "Deneme APK" --notes "$NOTES" --prerelease --target "$GITHUB_SHA"
           fi
+
+  # Play AAB: imza anahtarını yalnızca bu iş çözer. Yalnızca main'e push'ta çalışır (PR, başka dal ve elle çalıştırma anahtara erişemez).
+  # Anahtar sırları yoksa AAB üretilmez (uyarı). Varsa AAB imzalanır ve imzalayan keytool ile denetlenir: "Android Debug" çıkarsa iş kırmızı olur.
+  imza-aab:
+    name: Play AAB (imzalı)
+    needs: [veri, flutter]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: flutter/lid_kocu
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: false # imza işinde önbellek kullanılmaz (önbellek zehirlenmesi riski)
+
+      - name: Firebase yapılandırması (GOOGLE_SERVICES_JSON varsa)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -f android/app/google-services.json ]; then
+            echo "::notice::android/app/google-services.json depoda var, o kullanılıyor."
+            exit 0
+          fi
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::notice::GOOGLE_SERVICES_JSON yok: Firebase'siz derleniyor (Analytics/Remote Config kapalı)."
+            exit 0
+          fi
+          case "$(printf '%s' "$GOOGLE_SERVICES_JSON" | tr -d '[:space:]' | cut -c1)" in
+            "{") printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json ;;
+            *) printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json ;;
+          esac
+          python3 -c "import json,sys; d=json.load(open('android/app/google-services.json')); ok=any(c.get('client_info',{}).get('android_client_info',{}).get('package_name')=='com.lidkocu.app' for c in d.get('client',[])); sys.exit(0 if ok else 1)" \
+            || { echo "::error::google-services.json geçersiz veya com.lidkocu.app paketi için değil"; exit 1; }
+          echo "google-services.json yazıldı."
 
       - name: Yükleme anahtarını yerleştir
         id: anahtar
@@ -126,6 +232,7 @@ jobs:
         if: steps.anahtar.outputs.var == 'true'
         run: |
           set -o pipefail
+          flutter pub get
           # AdMob kimlikleri boşsa uyar (derleme kırılmaz): bu AAB'de reklam yüklenmez.
           for k in admobUygulamaKimligi bannerBirimi gecisBirimi odulluBirimi; do
             if grep -Eq "const String $k = '\s*';" lib/services/reklam_ayar.dart; then
@@ -137,47 +244,26 @@ jobs:
           cp build/app/outputs/bundle/release/app-release.aab "LiD-Kocu-$V.aab"
           rm -f android/upload.jks android/key.properties android/app/google-services.json
 
-      - uses: actions/upload-artifact@v5
+      - name: İmzalayanı denetle (Android Debug ise kırmızı)
+        if: steps.anahtar.outputs.var == 'true'
+        run: |
+          AAB=$(ls LiD-Kocu-*.aab | head -n 1)
+          ECIKTI=$(keytool -printcert -jarfile "$AAB" 2>&1) || { echo "::error title=İmza denetimi::keytool AAB'yi okuyamadı"; exit 1; }
+          echo "$ECIKTI" | grep -E '^(Signer|Owner:|\s+SHA256:)' || true
+          if echo "$ECIKTI" | grep -qi 'Not a signed jar'; then
+            echo "::error title=İmza denetimi::AAB imzasız"; exit 1
+          fi
+          if ! echo "$ECIKTI" | grep -q 'Owner:'; then
+            echo "::error title=İmza denetimi::AAB'de imzalayan sertifikası bulunamadı"; exit 1
+          fi
+          if echo "$ECIKTI" | grep -qi 'Android Debug'; then
+            echo "::error title=İmza denetimi::AAB 'Android Debug' anahtarıyla imzalandı; yükleme anahtarı kullanılmadı. Play'e yüklemeyin."; exit 1
+          fi
+          echo "İmza denetimi geçti: AAB debug olmayan bir anahtarla imzalı."
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: steps.anahtar.outputs.var == 'true'
         with:
           name: lid-kocu-play-aab
           path: flutter/lid_kocu/LiD-Kocu-*.aab
           retention-days: 30
-
-  # Açılış duman testi: Play derlemesiyle aynı ayarlarla (release, R8/minify açık, gerçek AdMob kimliği,
-  # google-services.json) APK derlenir ve Android 14 emülatöründe açılır. 15 sn içinde çökerse iş kırmızı olur.
-  acilis:
-    name: Emülatörde açılış (API 34)
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.47.9
-          cache: true
-      - name: Release APK (Play AAB ile aynı ayarlar, x86_64)
-        working-directory: flutter/lid_kocu
-        run: |
-          flutter pub get
-          flutter build apk --release --target-platform android-x64
-      - name: KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - name: Emülatörde aç
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          target: google_apis
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          script: bash .github/scripts/acilis-testi.sh flutter/lid_kocu/build/app/outputs/flutter-apk/app-release.apk com.lidkocu.app
-

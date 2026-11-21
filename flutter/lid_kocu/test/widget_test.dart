@@ -50,6 +50,23 @@ void main() {
     expect(basliklar.length, 4);
   });
 
+  testWidgets('alt bilgide Gizlilik politikasi baglantisi gorunur (4 dil)', (t) async {
+    _genisYuzey(t);
+    final s = await _kur(t);
+    await t.pumpWidget(LidKocuApp(state: s));
+    await t.pumpAndSettle();
+    final beklenen = {'tr': 'Gizlilik politikası', 'en': 'Privacy policy', 'de': 'Datenschutzerklärung', 'ar': 'سياسة الخصوصية'};
+    for (final d in diller) {
+      await t.tap(find.byKey(ValueKey('dil-$d')));
+      await t.pumpAndSettle();
+      final g = find.byKey(const ValueKey('gizlilik-politikasi'));
+      await t.ensureVisible(g);
+      expect(g, findsOneWidget);
+      expect(find.descendant(of: g, matching: find.text(beklenen[d]!)), findsOneWidget);
+    }
+    expect(gizlilikUrl, 'https://ttuncaydemirr-beep.github.io/privacy/lid-kocu/');
+  });
+
   testWidgets('arapcada rtl, Almanca soru ltr', (t) async {
     _genisYuzey(t);
     final s = await _kur(t);

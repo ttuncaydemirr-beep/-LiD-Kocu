@@ -31,6 +31,7 @@ class AltBilgi extends StatelessWidget {
           Text(s.t('imgNote'), style: stil),
           _Baglanti(metin: s.t('src'), url: kaynakUrl),
           _Baglanti(metin: s.t('testCenter'), url: testMerkeziUrl),
+          _Baglanti(key: const ValueKey('gizlilik-politikasi'), metin: s.t('privacyPolicy'), url: gizlilikUrl),
           // AB/AEA/İsviçre: UMP gerekli görürse (Premium'da reklam olmadığı için gösterilmez).
           if (!s.premium && s.reklam.gizlilikGerekli)
             _Baglanti(
