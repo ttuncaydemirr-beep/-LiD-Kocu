@@ -42,7 +42,8 @@ AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> _anahtarUret(int tohum) {
   final rnd = FortunaRandom()..seed(KeyParameter(Uint8List.fromList(List.generate(32, (i) => (i * 7 + tohum) & 0xff))));
   final g = RSAKeyGenerator()
     ..init(ParametersWithRandom(RSAKeyGeneratorParameters(BigInt.from(65537), 1024, 64), rnd));
-  return g.generateKeyPair();
+  final kp = g.generateKeyPair();
+  return AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey>(kp.publicKey as RSAPublicKey, kp.privateKey as RSAPrivateKey);
 }
 
 String _imzala(RSAPrivateKey k, String veri) {
